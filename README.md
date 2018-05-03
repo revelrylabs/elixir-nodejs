@@ -21,7 +21,7 @@ be found at [https://hexdocs.pm/react_server_render](https://hexdocs.pm/react_se
 
 ## Usage
 
-* Add `ServerSideRender.Server` to you Supervisor as a child
+* Add `ServerSideRender.Server` to your Supervisor as a child
 
 ```elixir
   render_server_path = "path/to/server.js"
