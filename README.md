@@ -1,5 +1,9 @@
 # ReactRender
 
+[![Build Status](https://travis-ci.org/revelrylabs/elixir_react_render.svg?branch=master)](https://travis-ci.org/revelrylabs/elixir_react_render)
+[![Hex.pm](https://img.shields.io/hexpm/dt/stellar.svg)](https://hex.pm/packages/react_render)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 Renders React as HTML
 
 ## Installation
@@ -14,6 +18,8 @@ def deps do
   ]
 end
 ```
+
+## Documentation
 
 Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
 and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
