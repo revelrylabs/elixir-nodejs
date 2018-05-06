@@ -23,6 +23,6 @@ script:
 deploy:
   skip_cleanup: true
   provider: script
-  script: chmod +x ./deploy.sh && ./deploy.sh
+  script: chmod +x ./publish.sh && ./publish.sh
   on:
     tags: true
