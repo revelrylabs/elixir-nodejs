@@ -9,14 +9,24 @@ process.stdin.on('end', () => {
   process.exit()
 })
 
-function makeHtml(body) {
+function makeHtml({path, props}) {
   try {
-    const componentPath = body.path
-    const props = body.props
+    const componentPath = path
+
+    // remove from cache in non-production environments
+    // so that we can see changes
+    if (
+      process.env.NODE_ENV != 'production' &&
+      require.resolve(componentPath) in require.cache
+    ) {
+      delete require.cache[require.resolve(componentPath)]
+    }
 
     const component = require(componentPath)
+    const element = component.default ? component.default : component
+
     const markup = ReactServer.renderToString(
-      React.createElement(component.default, props)
+      React.createElement(element, props)
     )
 
     const response = {
@@ -48,5 +58,6 @@ const rl = readline.createInterface({
 rl.on('line', function(line) {
   input = JSON.parse(line)
   result = makeHtml(input)
-  process.stdout.write(JSON.stringify(result))
+  json_result = JSON.stringify(result)
+  process.stdout.write(json_result)
 })

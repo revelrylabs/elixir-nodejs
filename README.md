@@ -1,6 +1,6 @@
-# ServerSideRender
+# ReactRender
 
-A Plug and GenServer for Server Side Rendering of JavaScript frameworks such as React.
+Renders React as HTML
 
 ## Installation
 
@@ -10,7 +10,7 @@ by adding `react_server_render` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:server_side_render, "~> 0.1.0"}
+    {:react_render, "~> 0.1.0"}
   ]
 end
 ```
@@ -21,18 +21,30 @@ be found at [https://hexdocs.pm/react_server_render](https://hexdocs.pm/react_se
 
 ## Usage
 
-* Add `ServerSideRender` to your Supervisor as a child
+* Run `mix react_render.install` install the node react render service into your project
+
+```bash
+mix react_render.install
+```
+
+This installs a folder called `render_server` into your priv directory by default.
+It contains the react render setup. The command will also ask if you would like to run `npm install`.
+
+* Add `ReactRender` to your Supervisor as a child
 
 ```elixir
-  render_server_path = "path/to/server.js"
+  render_server_path = "path/to/render_server/index.js"
 
-  worker(ServerSideRender.Server, [render_server_path])
+  worker(ReactRender, [render_server_path])
 ```
 
-**Note** Make sure that your js renderer exits on EOF. Do so by adding the following somewhere in your script
+* Call `ReactRender.get_html/2`
 
-```js
-process.stdin.on('end', () => {
-  process.exit()
-})``
+```elixir
+  component_path = "./HelloWorld.js"
+  props = %{name: "Revelry"}
+
+  ReactRender.get_html(component_path, props)
 ```
+
+`component_path` must be relative to your render server. The server will make sure that any changes you make are picked up. It does this by removing the component_path from node's `require` cache. If do not want this to happen, make sure to add `NODE_ENV` to your environment variables with the value `production`.

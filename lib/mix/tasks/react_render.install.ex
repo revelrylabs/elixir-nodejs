@@ -1,4 +1,4 @@
-defmodule Mix.Tasks.ServerSideRender.Install.React do
+defmodule Mix.Tasks.ReactRender.Install do
   use Mix.Task
 
   @shortdoc "Adds React html renderer to project"
@@ -8,8 +8,8 @@ defmodule Mix.Tasks.ServerSideRender.Install.React do
 
   usage:
 
-  mix server_side_render.install.react           install react renderer into priv folder
-  mix server_side_render.install.react --path <path>    install react renderer into path
+  mix react_render.install           install react renderer into priv folder
+  mix react_render.install --path <path>    install react renderer into path
   """
 
   @doc false
@@ -34,8 +34,8 @@ defmodule Mix.Tasks.ServerSideRender.Install.React do
   end
 
   defp install(path) do
-    input = Path.join([:code.priv_dir(:server_side_render), "react_renderer"])
-    output = Path.join(path, "react_renderer")
+    input = Path.join([:code.priv_dir(:react_render), "react_render_service"])
+    output = Path.join(path, "react_render_service")
     Mix.Generator.create_directory(output)
 
     File.cp_r(input, output)
@@ -53,8 +53,8 @@ defmodule Mix.Tasks.ServerSideRender.Install.React do
 
     usage:
 
-    mix server_side_render.install.react           install react renderer into priv folder
-    mix server_side_render.install.react --path <path>    install react renderer into path
+    mix react_render.install           install react renderer into priv folder
+    mix react_render.install --path <path>    install react renderer into path
     """
   end
 end
