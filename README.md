@@ -53,4 +53,4 @@ It contains the react render setup. The command will also ask if you would like 
   ReactRender.get_html(component_path, props)
 ```
 
-`component_path` must be relative to your render server. The server will make sure that any changes you make are picked up. It does this by removing the component_path from node's `require` cache. If do not want this to happen, make sure to add `NODE_ENV` to your environment variables with the value `production`.
+`component_path` can either be an absolute path or one relative to the render service. The service will make sure that any changes you make are picked up. It does this by removing the component_path from node's `require` cache. If do not want this to happen, make sure to add `NODE_ENV` to your environment variables with the value `production`.
