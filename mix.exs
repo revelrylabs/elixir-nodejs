@@ -23,10 +23,7 @@ defmodule ServerSideRender.MixProject do
   defp deps do
     [
       {:plug, "~> 1.5"},
-      {:retry, "~> 0.8"},
-      {:httpoison, "~> 1.1"},
-      {:porcelain, "~> 2.0"},
-      {:confex, "~> 3.3"}
+      {:jason, "~> 1.0"}
     ]
   end
 end

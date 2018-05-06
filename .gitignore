@@ -24,3 +24,5 @@ react_server_render-*.tar
 
 .elixir_ls
 
+/test/render_server/
+
