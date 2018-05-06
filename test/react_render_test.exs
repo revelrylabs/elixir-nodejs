@@ -14,7 +14,7 @@ defmodule ReactRender.Test do
   end
 
   test "Returns error when no component found" do
-    {:error, error} = ReactRender.get_html("./Taco.js")
+    {:error, error} = ReactRender.get_html("./NotFound.js")
     assert error.message =~ "Cannot find module"
   end
 
