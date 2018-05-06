@@ -1,0 +1,28 @@
+sudo: false
+language: elixir
+elixir:
+  - 1.6
+otp_release:
+  - 20.3
+cache:
+  directories:
+    - _build
+    - deps
+    - priv/node_modules
+install:
+  - rm -rf ~/.nvm && git clone https://github.com/creationix/nvm.git ~/.nvm && (cd ~/.nvm && git checkout `git describe --abbrev=0 --tags`) && source ~/.nvm/nvm.sh && nvm install 9
+  - mix local.hex --force
+  - mix local.rebar --force
+  - mix deps.get
+  - cd priv/react_render_service
+  - npm install
+  - cd ../..
+script:
+  - mix test
+  - mix compile
+deploy:
+  skip_cleanup: true
+  provider: script
+  script: chmod +x ./deploy.sh && ./deploy.sh
+  on:
+    tags: true
