@@ -33,15 +33,15 @@ be found at [https://hexdocs.pm/react_server_render](https://hexdocs.pm/react_se
 mix react_render.install
 ```
 
-This installs a folder called `render_server` into your priv directory by default.
+This installs a folder called `react_render_service` into your priv directory by default.
 It contains the react render setup. The command will also ask if you would like to run `npm install`.
 
 * Add `ReactRender` to your Supervisor as a child
 
 ```elixir
-  render_server_path = "path/to/render_server/index.js"
+  render_service_path = "path/to/react_render_service/index.js"
 
-  worker(ReactRender, [render_server_path])
+  worker(ReactRender, [render_service_path])
 ```
 
 * Call `ReactRender.get_html/2`
