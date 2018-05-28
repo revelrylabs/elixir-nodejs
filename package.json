@@ -1,0 +1,29 @@
+{
+  "name": "react_render",
+  "version": "1.0.0",
+  "description": "",
+  "main": "react_render.js",
+  "author": "Bryan Joseph <bryan@revelry.co> (https://revelry.co)",
+  "license": "MIT",
+  "files": [
+    "README.md",
+    "LICENSE",
+    "package.json",
+    "react_render.js",
+    ".babelrc"
+  ],
+  "dependencies": {
+    "babel-polyfill": "^6.26.0",
+    "babel-preset-env": "^1.6.1",
+    "babel-preset-react": "^6.24.1",
+    "babel-register": "^6.26.0"
+  },
+  "devDependencies": {
+    "react": "^16.3.2",
+    "react-dom": "^16.3.2"
+  },
+  "peerDependencies": {
+    "react": ">= 16.3 < 17",
+    "react-dom": ">= 16.3 < 17"
+  }
+}

@@ -57,9 +57,9 @@ defmodule ReactRender.MixProject do
         "README.md",
         "LICENSE",
         "CHANGELOG.md",
-        "priv/react_render_service/index.js",
-        "priv/react_render_service/package.json",
-        "priv/react_render_service/.babelrc"
+        "react_render.js",
+        "package.json",
+        ".babelrc"
       ],
       maintainers: ["Bryan Joseph", "Luke Ledet"],
       licenses: ["MIT"],

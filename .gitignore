@@ -24,6 +24,6 @@ react_render-*.tar
 
 .elixir_ls
 
-priv/react_render_service/node_modules/
-priv/react_render_service/package-lock.json
+/node_modules/
+package-lock.json
 

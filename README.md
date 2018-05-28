@@ -27,19 +27,30 @@ be found at [https://hexdocs.pm/react_server_render](https://hexdocs.pm/react_se
 
 ## Usage
 
-* Run `mix react_render.install` install the node react render service into your project
+* Add `react_render` to your package.json
 
-```bash
-mix react_render.install
+```js
+"react_render": "file:../deps/react_render"
 ```
 
-This installs a folder called `react_render_service` into your priv directory by default.
-It contains the react render setup. The command will also ask if you would like to run `npm install`.
+* Run `npm install`
 
-* Add `ReactRender` to your Supervisor as a child
+```bash
+npm install
+```
+
+* Create a file named `server.js` in your `assets/js` folder and add the following
+
+```js
+const ReactRender = require('react_render')
+
+ReactRender.startServer()
+```
+
+* Add `ReactRender` to your Supervisor as a child.
 
 ```elixir
-  render_service_path = "path/to/react_render_service/index.js"
+  render_service_path = "assets/js/server.js"
 
   worker(ReactRender, [render_service_path])
 ```
@@ -54,3 +65,20 @@ It contains the react render setup. The command will also ask if you would like 
 ```
 
 `component_path` can either be an absolute path or one relative to the render service. The stipulation is that components must be in the same path or a sub directory of the render service. This is so that the babel compiler will be able to compile it. The service will make sure that any changes you make are picked up. It does this by removing the component_path from node's `require` cache. If do not want this to happen, make sure to add `NODE_ENV` to your environment variables with the value `production`.
+
+* To hydrate server-created components in the client, add the following to your `app.js`
+
+```js
+import {hydrateClient} from 'react_render'
+
+function getComponentFromStringName(stringName) {
+  // Map string component names to your react components here
+  if (stringName === 'HelloWorld') {
+    return HelloWorld
+  }
+
+  return null
+}
+
+hydrateClient(getComponentFromStringName)
+```
