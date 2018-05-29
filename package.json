@@ -1,16 +1,16 @@
 {
   "name": "react_render",
   "version": "1.0.0",
-  "description": "",
-  "main": "react_render.js",
+  "description": "./priv/server.js",
   "author": "Bryan Joseph <bryan@revelry.co> (https://revelry.co)",
   "license": "MIT",
   "files": [
     "README.md",
     "LICENSE",
     "package.json",
-    "react_render.js",
-    ".babelrc"
+    "./priv/server.js",
+    "./priv/client.js",
+    "./priv/.babelrc"
   ],
   "dependencies": {
     "babel-polyfill": "^6.26.0",

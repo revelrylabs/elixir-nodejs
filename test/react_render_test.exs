@@ -3,7 +3,7 @@ defmodule ReactRender.Test do
   doctest ReactRender
 
   setup do
-    ReactRender.start_link("react_render.js")
+    ReactRender.start_link("./priv/server.js")
     :ok
   end
 

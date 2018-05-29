@@ -1,6 +1,5 @@
 const ReactServer = require('react-dom/server')
 const React = require('react')
-const ReactDOM = require('react-dom')
 const readline = require('readline')
 
 require('babel-polyfill')
@@ -73,26 +72,7 @@ function startServer() {
   })
 }
 
-/**
- * Hydrates react components that had HTML created from server.
- * Looks for divs with 'data-rendered' attributes. Gets component
- * name from the 'data-component' attribute and props from the
- * 'data-props' attribute.
- * @param {Function} componentMapper - A function that takes in a name and returns the component
- */
-function hydrateClient(componentMapper) {
-  const serverRenderedComponents = document.querySelectorAll('[data-rendered]')
-
-  for (const serverRenderedComponent of serverRenderedComponents) {
-    const component = componentMapper(serverRenderedComponent.dataset.component)
-    const props = JSON.parse(serverRenderedComponent.dataset.props)
-    const element = React.createElement(component, props)
-
-    ReactDOM.hydrate(element, serverRenderedComponent)
-  }
-}
-
-module.exports = {startServer, hydrateClient}
+module.exports = {startServer}
 
 if (require.main === module) {
   startServer()
