@@ -42,7 +42,7 @@ npm install
 * Create a file named `server.js` in your `assets/js` folder and add the following
 
 ```js
-const ReactRender = require('react_render')
+const ReactRender = require('react_render/priv/server')
 
 ReactRender.startServer()
 ```
@@ -69,7 +69,7 @@ ReactRender.startServer()
 * To hydrate server-created components in the client, add the following to your `app.js`
 
 ```js
-import {hydrateClient} from 'react_render'
+import {hydrateClient} from 'react_render/priv/client'
 
 function getComponentFromStringName(stringName) {
   // Map string component names to your react components here
