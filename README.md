@@ -14,7 +14,7 @@ by adding `react_server_render` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:react_render, "~> 0.1.0"}
+    {:react_render, "~> 1.0.0"}
   ]
 end
 ```
@@ -25,21 +25,21 @@ Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_do
 and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
 be found at [https://hexdocs.pm/react_server_render](https://hexdocs.pm/react_server_render).
 
-## Usage
+## Getting Started with Phoenix
 
-* Add `react_render` to your package.json
+- Add `react_render` to your package.json
 
 ```js
 "react_render": "file:../deps/react_render"
 ```
 
-* Run `npm install`
+- Run `npm install`
 
 ```bash
 npm install
 ```
 
-* Create a file named `server.js` in your `assets/js` folder and add the following
+- Create a file named `server.js` in your `assets/js` folder and add the following
 
 ```js
 const ReactRender = require('react_render/priv/server')
@@ -47,7 +47,7 @@ const ReactRender = require('react_render/priv/server')
 ReactRender.startServer()
 ```
 
-* Add `ReactRender` to your Supervisor as a child.
+- Add `ReactRender` to your Supervisor as a child.
 
 ```elixir
   render_service_path = "assets/js/server.js"
@@ -55,18 +55,18 @@ ReactRender.startServer()
   worker(ReactRender, [render_service_path])
 ```
 
-* Call `ReactRender.get_html/2`
+- Call `ReactRender.render/2`
 
 ```elixir
   component_path = "./HelloWorld.js"
   props = %{name: "Revelry"}
 
-  ReactRender.get_html(component_path, props)
+  ReactRender.render(component_path, props)
 ```
 
 `component_path` can either be an absolute path or one relative to the render service. The stipulation is that components must be in the same path or a sub directory of the render service. This is so that the babel compiler will be able to compile it. The service will make sure that any changes you make are picked up. It does this by removing the component_path from node's `require` cache. If do not want this to happen, make sure to add `NODE_ENV` to your environment variables with the value `production`.
 
-* To hydrate server-created components in the client, add the following to your `app.js`
+- To hydrate server-created components in the client, add the following to your `app.js`
 
 ```js
 import {hydrateClient} from 'react_render/priv/client'
