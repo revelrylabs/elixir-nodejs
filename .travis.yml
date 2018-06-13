@@ -17,10 +17,3 @@ install:
   - npm install
 script:
   - mix test
-  - mix compile
-deploy:
-  skip_cleanup: true
-  provider: script
-  script: chmod +x ./publish.sh && ./publish.sh
-  on:
-    tags: true

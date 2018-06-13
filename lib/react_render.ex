@@ -34,6 +34,50 @@ defmodule ReactRender do
   """
   @spec get_html(binary(), map()) :: {:ok, binary()} | {:error, map()}
   def get_html(component_path, props \\ %{}) do
+    case do_get_html(component_path, props) do
+      {:error, _} = error ->
+        error
+
+      {:ok, %{"markup" => markup}} ->
+        {:ok, markup}
+    end
+  end
+
+  @doc """
+  Same as `get_html/2` but wraps html in a div which is used
+  to hydrate react component on client side.
+
+  This is the preferred function when using with Phoenix
+
+  `component_path` is the path to your react component module relative
+  to the render service.
+
+  `props` is a map of props given to the component. Must be able to turn into
+  json
+  """
+  @spec render(binary(), map()) :: {:ok, binary()} | {:error, map()}
+  def render(component_path, props \\ %{}) do
+    case do_get_html(component_path, props) do
+      {:error, _} = error ->
+        error
+
+      {:ok, %{"markup" => markup, "component" => component}} ->
+        props =
+          props
+          |> Jason.encode!()
+          |> String.replace("\"", "&quot;")
+
+        html = """
+        <div data-rendered data-component="#{component}" data-props="#{props}">
+        #{markup}
+        </div>
+        """
+
+        {:ok, html}
+    end
+  end
+
+  defp do_get_html(component_path, props) do
     case GenServer.call(__MODULE__, {:html, component_path, props}) do
       %{"error" => error} when not is_nil(error) ->
         normalized_error = %{
@@ -43,13 +87,13 @@ defmodule ReactRender do
 
         {:error, normalized_error}
 
-      %{"markup" => html} ->
-        {:ok, html}
+      result ->
+        {:ok, result}
     end
   end
 
   # --- GenServer Callbacks ---
-
+  @doc false
   def init([render_server_path]) do
     node = System.find_executable("node")
 
@@ -58,6 +102,7 @@ defmodule ReactRender do
     {:ok, [render_server_path, port]}
   end
 
+  @doc false
   def handle_call({:html, component_path, props}, _from, [_, port] = state) do
     body =
       Jason.encode!(%{
@@ -76,6 +121,7 @@ defmodule ReactRender do
     {:reply, response, state}
   end
 
+  @doc false
   def terminate(_reason, [_, port]) do
     send(port, {self(), :close})
   end

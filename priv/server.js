@@ -27,15 +27,11 @@ function makeHtml({path, props}) {
     const createdElement = React.createElement(element, props)
 
     const markup = ReactServer.renderToString(createdElement)
-    const stringProps = JSON.stringify(props).replace(/"/g, '&quot;')
-
-    const html = `<div data-rendered data-component="${
-      element.name
-    }" data-props="${stringProps}">${markup}</div>`
 
     const response = {
       error: null,
-      markup: html,
+      markup: markup,
+      component: element.name,
     }
 
     return response
@@ -47,6 +43,7 @@ function makeHtml({path, props}) {
         stack: err.stack,
       },
       markup: null,
+      component: null,
     }
 
     return response
