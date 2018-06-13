@@ -59,7 +59,6 @@ defmodule ReactRender.MixProject do
         "CHANGELOG.md",
         "priv/server.js",
         "priv/client.js",
-        "priv/.babelrc",
         "package.json"
       ],
       maintainers: ["Bryan Joseph", "Luke Ledet"],
