@@ -47,9 +47,9 @@ ReactRender.startServer()
 
 ```elixir
   render_service_path = "assets/js/server.js"
-  pool_size = 5
+  pool_size = 4
 
-  supervisor(ReactRender, [render_service_path: render_service_path, pool_size: 5])
+  supervisor(ReactRender, [render_service_path: render_service_path, pool_size: 4])
 ```
 
 - Call `ReactRender.render/2`
