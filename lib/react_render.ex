@@ -6,11 +6,16 @@ defmodule ReactRender do
   """
 
   @doc """
-  Starts the ReactRender and underlying node react render service
-  `render_server_path` is the path to the react render service relative
+  Starts the ReactRender and underlying node react render service.
+
+  Takes the following options:
+
+  `render_server_path`: is the path to the react render service relative
   to your current working directory
+
+  `pool_size`: the number of workers
   """
-  @spec start_link(binary()) :: {:ok, pid} | {:error, any()}
+  @spec start_link(keyword()) :: {:ok, pid} | {:error, any()}
   def start_link(args) do
     GenServer.start_link(__MODULE__, args, name: __MODULE__)
   end
