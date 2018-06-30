@@ -1,8 +1,9 @@
 defmodule ReactRender do
   use Supervisor
 
-  @timeout 5_000
+  @timeout 10_000
   @pool_name :react_render
+  @default_pool_size 4
 
   @moduledoc """
   React Renderer
@@ -18,7 +19,7 @@ defmodule ReactRender do
   """
   @spec start_link(keyword()) :: {:ok, pid} | {:error, any()}
   def start_link(args) do
-    default_options = [pool_size: 4]
+    default_options = [pool_size: @default_pool_size]
     opts = Keyword.merge(default_options, args)
 
     Supervisor.start_link(__MODULE__, opts, name: __MODULE__)
@@ -92,11 +93,11 @@ defmodule ReactRender do
         :poolboy.transaction(
           @pool_name,
           fn pid -> GenServer.call(pid, {:html, component_path, props}) end,
-          @timeout
+          :infinity
         )
       end)
 
-    case Task.await(task, 7_000) do
+    case Task.await(task, @timeout) do
       %{"error" => error} when not is_nil(error) ->
         normalized_error = %{
           message: error["message"],
