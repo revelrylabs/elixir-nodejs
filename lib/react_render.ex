@@ -11,8 +11,8 @@ defmodule ReactRender do
   to your current working directory
   """
   @spec start_link(binary()) :: {:ok, pid} | {:error, any()}
-  def start_link(render_server_path) do
-    GenServer.start_link(__MODULE__, [render_server_path], name: __MODULE__)
+  def start_link(args) do
+    GenServer.start_link(__MODULE__, args, name: __MODULE__)
   end
 
   @doc """
@@ -55,11 +55,11 @@ defmodule ReactRender do
   `props` is a map of props given to the component. Must be able to turn into
   json
   """
-  @spec render(binary(), map()) :: {:ok, binary()} | {:error, map()}
+  @spec render(binary(), map()) :: {:safe, binary()}
   def render(component_path, props \\ %{}) do
     case do_get_html(component_path, props) do
-      {:error, _} = error ->
-        error
+      {:error, %{message: message, stack: stack}} ->
+        raise ReactRender.RenderError, message: message, stack: stack
 
       {:ok, %{"markup" => markup, "component" => component}} ->
         props =
@@ -73,7 +73,7 @@ defmodule ReactRender do
         </div>
         """
 
-        {:ok, html}
+        {:safe, html}
     end
   end
 
@@ -94,12 +94,13 @@ defmodule ReactRender do
 
   # --- GenServer Callbacks ---
   @doc false
-  def init([render_server_path]) do
+  def init(args) do
+    render_service_path = args[:render_service_path]
     node = System.find_executable("node")
 
-    port = Port.open({:spawn_executable, node}, args: [render_server_path])
+    port = Port.open({:spawn_executable, node}, args: [render_service_path])
 
-    {:ok, [render_server_path, port]}
+    {:ok, [render_service_path, port]}
   end
 
   @doc false
