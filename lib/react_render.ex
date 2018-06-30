@@ -1,23 +1,27 @@
 defmodule ReactRender do
-  use GenServer
+  use Supervisor
+
+  @timeout 5_000
+  @pool_name :react_render
 
   @moduledoc """
-  A genserver that controls the starting of the node render service
+  React Renderer
   """
 
   @doc """
-  Starts the ReactRender and underlying node react render service.
+  Starts the ReactRender and workers.
 
-  Takes the following options:
-
-  `render_server_path`: is the path to the react render service relative
+  ## Options
+    * `:render_service_path` - (required) is the path to the react render service relative
   to your current working directory
-
-  `pool_size`: the number of workers
+    * `:pool_size` - (optional) the number of workers. Defaults to 4
   """
   @spec start_link(keyword()) :: {:ok, pid} | {:error, any()}
   def start_link(args) do
-    GenServer.start_link(__MODULE__, args, name: __MODULE__)
+    default_options = [pool_size: 4]
+    opts = Keyword.merge(default_options, args)
+
+    Supervisor.start_link(__MODULE__, opts, name: __MODULE__)
   end
 
   @doc """
@@ -25,7 +29,7 @@ defmodule ReactRender do
   """
   @spec stop() :: :ok
   def stop() do
-    GenServer.stop(__MODULE__)
+    Supervisor.stop(__MODULE__)
   end
 
   @doc """
@@ -83,7 +87,16 @@ defmodule ReactRender do
   end
 
   defp do_get_html(component_path, props) do
-    case GenServer.call(__MODULE__, {:html, component_path, props}) do
+    task =
+      Task.async(fn ->
+        :poolboy.transaction(
+          @pool_name,
+          fn pid -> GenServer.call(pid, {:html, component_path, props}) end,
+          @timeout
+        )
+      end)
+
+    case Task.await(task, 7_000) do
       %{"error" => error} when not is_nil(error) ->
         normalized_error = %{
           message: error["message"],
@@ -97,38 +110,24 @@ defmodule ReactRender do
     end
   end
 
-  # --- GenServer Callbacks ---
+  # --- Supervisor Callbacks ---
   @doc false
-  def init(args) do
-    render_service_path = args[:render_service_path]
-    node = System.find_executable("node")
+  def init(opts) do
+    pool_size = Keyword.fetch!(opts, :pool_size)
+    render_service_path = Keyword.fetch!(opts, :render_service_path)
 
-    port = Port.open({:spawn_executable, node}, args: [render_service_path])
+    pool_opts = [
+      name: {:local, @pool_name},
+      worker_module: ReactRender.Worker,
+      size: pool_size,
+      max_overflow: 0
+    ]
 
-    {:ok, [render_service_path, port]}
-  end
+    children = [
+      :poolboy.child_spec(@pool_name, pool_opts, [render_service_path])
+    ]
 
-  @doc false
-  def handle_call({:html, component_path, props}, _from, [_, port] = state) do
-    body =
-      Jason.encode!(%{
-        path: component_path,
-        props: props
-      })
-
-    Port.command(port, body <> "\n")
-
-    response =
-      receive do
-        {_, {:data, data}} ->
-          Jason.decode!(to_string(data))
-      end
-
-    {:reply, response, state}
-  end
-
-  @doc false
-  def terminate(_reason, [_, port]) do
-    send(port, {self(), :close})
+    opts = [strategy: :one_for_one]
+    Supervisor.init(children, opts)
   end
 end

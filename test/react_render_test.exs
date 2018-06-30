@@ -2,7 +2,7 @@ defmodule ReactRender.Test do
   use ExUnit.Case
   doctest ReactRender
 
-  setup do
+  setup_all do
     ReactRender.start_link(render_service_path: "./priv/server.js")
     :ok
   end
@@ -35,9 +35,5 @@ defmodule ReactRender.Test do
         ReactRender.render("./NotFound.js")
       end
     end
-  end
-
-  test "stop" do
-    assert ReactRender.stop() == :ok
   end
 end
