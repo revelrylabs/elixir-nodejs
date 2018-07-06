@@ -17,3 +17,9 @@ install:
   - npm install
 script:
   - mix test
+deploy:
+  skip_cleanup: true
+  provider: script
+  script: mix hex.publish --yes
+  on:
+    tags: true
