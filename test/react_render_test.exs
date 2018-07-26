@@ -2,8 +2,8 @@ defmodule ReactRender.Test do
   use ExUnit.Case
   doctest ReactRender
 
-  setup do
-    ReactRender.start_link("./priv/server.js")
+  setup_all do
+    ReactRender.start_link(render_service_path: "./priv/server.js")
     :ok
   end
 
@@ -22,7 +22,7 @@ defmodule ReactRender.Test do
 
   describe "render" do
     test "returns html" do
-      {:ok, html} = ReactRender.render("./HelloWorld.js", %{name: "test"})
+      {:safe, html} = ReactRender.render("./HelloWorld.js", %{name: "test"})
       assert html =~ "data-rendered"
       assert html =~ "data-component"
       assert html =~ "HelloWorld"
@@ -30,13 +30,10 @@ defmodule ReactRender.Test do
       assert html =~ "test</div>"
     end
 
-    test "returns error when no component found" do
-      {:error, error} = ReactRender.render("./NotFound.js")
-      assert error.message =~ "Cannot find module"
+    test "raises RenderError when no component found" do
+      assert_raise ReactRender.RenderError, "Cannot find module './NotFound.js'", fn ->
+        ReactRender.render("./NotFound.js")
+      end
     end
-  end
-
-  test "stop" do
-    assert ReactRender.stop() == :ok
   end
 end

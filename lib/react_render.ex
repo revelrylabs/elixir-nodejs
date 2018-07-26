@@ -1,18 +1,28 @@
 defmodule ReactRender do
-  use GenServer
+  use Supervisor
+
+  @timeout 10_000
+  @pool_name :react_render
+  @default_pool_size 4
 
   @moduledoc """
-  A genserver that controls the starting of the node render service
+  React Renderer
   """
 
   @doc """
-  Starts the ReactRender and underlying node react render service
-  `render_server_path` is the path to the react render service relative
+  Starts the ReactRender and workers.
+
+  ## Options
+    * `:render_service_path` - (required) is the path to the react render service relative
   to your current working directory
+    * `:pool_size` - (optional) the number of workers. Defaults to 4
   """
-  @spec start_link(binary()) :: {:ok, pid} | {:error, any()}
-  def start_link(render_server_path) do
-    GenServer.start_link(__MODULE__, [render_server_path], name: __MODULE__)
+  @spec start_link(keyword()) :: {:ok, pid} | {:error, any()}
+  def start_link(args) do
+    default_options = [pool_size: @default_pool_size]
+    opts = Keyword.merge(default_options, args)
+
+    Supervisor.start_link(__MODULE__, opts, name: __MODULE__)
   end
 
   @doc """
@@ -20,7 +30,7 @@ defmodule ReactRender do
   """
   @spec stop() :: :ok
   def stop() do
-    GenServer.stop(__MODULE__)
+    Supervisor.stop(__MODULE__)
   end
 
   @doc """
@@ -55,11 +65,11 @@ defmodule ReactRender do
   `props` is a map of props given to the component. Must be able to turn into
   json
   """
-  @spec render(binary(), map()) :: {:ok, binary()} | {:error, map()}
+  @spec render(binary(), map()) :: {:safe, binary()}
   def render(component_path, props \\ %{}) do
     case do_get_html(component_path, props) do
-      {:error, _} = error ->
-        error
+      {:error, %{message: message, stack: stack}} ->
+        raise ReactRender.RenderError, message: message, stack: stack
 
       {:ok, %{"markup" => markup, "component" => component}} ->
         props =
@@ -73,12 +83,21 @@ defmodule ReactRender do
         </div>
         """
 
-        {:ok, html}
+        {:safe, html}
     end
   end
 
   defp do_get_html(component_path, props) do
-    case GenServer.call(__MODULE__, {:html, component_path, props}) do
+    task =
+      Task.async(fn ->
+        :poolboy.transaction(
+          @pool_name,
+          fn pid -> GenServer.call(pid, {:html, component_path, props}) end,
+          :infinity
+        )
+      end)
+
+    case Task.await(task, @timeout) do
       %{"error" => error} when not is_nil(error) ->
         normalized_error = %{
           message: error["message"],
@@ -92,37 +111,24 @@ defmodule ReactRender do
     end
   end
 
-  # --- GenServer Callbacks ---
+  # --- Supervisor Callbacks ---
   @doc false
-  def init([render_server_path]) do
-    node = System.find_executable("node")
+  def init(opts) do
+    pool_size = Keyword.fetch!(opts, :pool_size)
+    render_service_path = Keyword.fetch!(opts, :render_service_path)
 
-    port = Port.open({:spawn_executable, node}, args: [render_server_path])
+    pool_opts = [
+      name: {:local, @pool_name},
+      worker_module: ReactRender.Worker,
+      size: pool_size,
+      max_overflow: 0
+    ]
 
-    {:ok, [render_server_path, port]}
-  end
+    children = [
+      :poolboy.child_spec(@pool_name, pool_opts, [render_service_path])
+    ]
 
-  @doc false
-  def handle_call({:html, component_path, props}, _from, [_, port] = state) do
-    body =
-      Jason.encode!(%{
-        path: component_path,
-        props: props
-      })
-
-    Port.command(port, body <> "\n")
-
-    response =
-      receive do
-        {_, {:data, data}} ->
-          Jason.decode!(to_string(data))
-      end
-
-    {:reply, response, state}
-  end
-
-  @doc false
-  def terminate(_reason, [_, port]) do
-    send(port, {self(), :close})
+    opts = [strategy: :one_for_one]
+    Supervisor.init(children, opts)
   end
 end

@@ -6,24 +6,20 @@
 
 Renders React as HTML
 
-## Installation
+## Documentation
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `react_server_render` to your list of dependencies in `mix.exs`:
+The docs can
+be found at [https://hexdocs.pm/react_render](https://hexdocs.pm/react_render).
+
+## Installation
 
 ```elixir
 def deps do
   [
-    {:react_render, "~> 1.0.0"}
+    {:react_render, "~> 2.0.0"}
   ]
 end
 ```
-
-## Documentation
-
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at [https://hexdocs.pm/react_server_render](https://hexdocs.pm/react_server_render).
 
 ## Getting Started with Phoenix
 
@@ -51,8 +47,9 @@ ReactRender.startServer()
 
 ```elixir
   render_service_path = "assets/js/server.js"
+  pool_size = 4
 
-  worker(ReactRender, [render_service_path])
+  supervisor(ReactRender, [render_service_path: render_service_path, pool_size: 4])
 ```
 
 - Call `ReactRender.render/2`

@@ -3,7 +3,7 @@ language: elixir
 elixir:
   - 1.6
 otp_release:
-  - 20.3
+  - 21.0
 cache:
   directories:
     - _build
@@ -17,3 +17,9 @@ install:
   - npm install
 script:
   - mix test
+deploy:
+  skip_cleanup: true
+  provider: script
+  script: mix hex.publish --yes
+  on:
+    tags: true

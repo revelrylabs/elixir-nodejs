@@ -4,7 +4,7 @@ defmodule ReactRender.MixProject do
   def project do
     [
       app: :react_render,
-      version: "1.0.0",
+      version: "2.0.0-dev",
       elixir: "~> 1.6",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
@@ -39,7 +39,8 @@ defmodule ReactRender.MixProject do
     [
       {:jason, "~> 1.0"},
       {:ex_doc, "~> 0.18.1", only: :dev},
-      {:excoveralls, "~> 0.8.0", only: :test}
+      {:excoveralls, "~> 0.8.0", only: :test},
+      {:poolboy, "~> 1.5.1"}
     ]
   end
 
