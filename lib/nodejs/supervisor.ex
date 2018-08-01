@@ -6,11 +6,11 @@ defmodule NodeJS.Supervisor do
   @default_pool_size 4
 
   @moduledoc """
-  React Renderer
+  NodeJS.Supervisor
   """
 
   @doc """
-  Starts the NodeJS and workers.
+  Starts the Node.js supervisor and workers.
 
   ## Options
     * `:path` - (required) The path to your Node.js code's root directory.

@@ -20,8 +20,8 @@ defmodule NodeJS.MixProject do
 
       # Docs
       name: "NodeJS",
-      source_url: "https://github.com/revelrylabs/elixir_node",
-      homepage_url: "https://github.com/revelrylabs/elixir_node",
+      source_url: "https://github.com/revelrylabs/elixir-nodejs",
+      homepage_url: "https://github.com/revelrylabs/elixir-nodejs",
       # The main page in the docs
       docs: [main: "NodeJS", extras: ["README.md"]]
     ]
@@ -46,7 +46,7 @@ defmodule NodeJS.MixProject do
 
   defp description do
     """
-    Renders React components as HTML
+    Provides an Elixir API for calling Node.js functions.
     """
   end
 
@@ -62,10 +62,10 @@ defmodule NodeJS.MixProject do
         "priv/client.js",
         "package.json"
       ],
-      maintainers: ["Bryan Joseph", "Luke Ledet"],
+      maintainers: ["Bryan Joseph", "Luke Ledet", "Joel Wietelmann"],
       licenses: ["MIT"],
       links: %{
-        "GitHub" => "https://github.com/revelrylabs/elixir_node"
+        "GitHub" => "https://github.com/revelrylabs/elixir-nodejs"
       },
       build_tools: ["mix"]
     ]

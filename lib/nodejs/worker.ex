@@ -2,7 +2,7 @@ defmodule NodeJS.Worker do
   use GenServer
 
   @moduledoc """
-  A genserver that controls the starting of the node render service
+  A genserver that controls the starting of the node service
   """
 
   @doc """

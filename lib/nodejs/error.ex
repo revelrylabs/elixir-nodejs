@@ -1,6 +1,6 @@
 defmodule NodeJS.Error do
   @moduledoc """
-  Error when unable to render given component
+  Error when Node.js sends back an error.
   """
 
   defexception message: nil, stack: nil
