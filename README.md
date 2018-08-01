@@ -4,7 +4,7 @@
 [![Hex.pm](https://img.shields.io/hexpm/dt/nodejs.svg)](https://hex.pm/packages/nodejs)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Renders React as HTML
+Provides an Elixir API for calling Node.js functions.
 
 ## Documentation
 
