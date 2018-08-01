@@ -1,7 +1,7 @@
 # NodeJS
 
-[![Build Status](https://travis-ci.org/revelrylabs/elixir_node.svg?branch=master)](https://travis-ci.org/revelrylabs/elixir_node)
-[![Hex.pm](https://img.shields.io/hexpm/dt/node.svg)](https://hex.pm/packages/node)
+[![Build Status](https://travis-ci.org/revelrylabs/elixir-nodejs.svg?branch=master)](https://travis-ci.org/revelrylabs/elixir-nodejs)
+[![Hex.pm](https://img.shields.io/hexpm/dt/nodejs.svg)](https://hex.pm/packages/nodejs)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 Renders React as HTML
@@ -9,70 +9,72 @@ Renders React as HTML
 ## Documentation
 
 The docs can
-be found at [https://hexdocs.pm/node](https://hexdocs.pm/node).
+be found at [https://hexdocs.pm/nodejs](https://hexdocs.pm/nodejs).
+
+## Prerequisites
+
+* Elixir >= 1.6
+* NodeJS >= 10
 
 ## Installation
 
 ```elixir
 def deps do
   [
-    {:nodejs, "~> 2.0.0"}
+    {:nodejs, "~> 0.1.0"}
   ]
 end
 ```
 
-## Getting Started with Phoenix
+## Starting the service
 
-- Add `node` to your package.json
-
-```js
-"node": "file:../deps/node"
-```
-
-- Run `npm install`
-
-```bash
-npm install
-```
-
-- Create a file named `server.js` in your `assets/js` folder and add the following
-
-```js
-const NodeJS = require('node/priv/server')
-
-NodeJS.startServer()
-```
-
-- Add `NodeJS` to your Supervisor as a child.
+Add `NodeJS` to your Supervisor as a child, pointing the required `path` option at the
+directory containing your JavaScript modules.
 
 ```elixir
-supervisor(NodeJS, path: "/my/node/app/root", pool_size: 4)
+supervisor(NodeJS, path: "/node_app_root", pool_size: 4)
 ```
 
-- Call `NodeJS.render/2`
+### Calling JavaScript module functions with `NodeJS.call(module, args \\ [])`.
+
+If the module exports a function directly, like this:
+
+```javascript
+module.exports = (x) => x
+```
+
+You can call it like this:
 
 ```elixir
-  component_path = "./HelloWorld.js"
-  props = %{name: "Revelry"}
-
-  NodeJS.render(component_path, props)
+NodeJS.call("echo", ["hello"]) #=> {:ok, "hello"}
 ```
 
-`component_path` can either be an absolute path or one relative to the render service. The stipulation is that components must be in the same path or a sub directory of the render service. This is so that the babel compiler will be able to compile it. The service will make sure that any changes you make are picked up. It does this by removing the component_path from node's `require` cache. If do not want this to happen, make sure to add `NODE_ENV` to your environment variables with the value `production`.
+There is also a `call!` form that throws on error instead of returning a tuple:
 
-- To hydrate server-created components in the client, add the following to your `app.js`
-
-```js
-import {hydrateClient} from 'node/priv/client'
-
-function getComponentFromStringName(stringName) {
-  // Map string component names to your react components here
-  if (stringName === 'HelloWorld') {
-    return HelloWorld
-  }
-
-  return null
-}
-
-hydrateClient(getComponentFromStringName)
+```elixir
+NodeJS.call!("echo", ["hello"]) #=> "hello"
 ```
+
+If the module exports an object with named functions like:
+
+```javascript
+exports.add = (a, b) => a + b
+exports.sub = (a, b) => a - b
+```
+
+You can call them like this:
+
+```elixir
+NodeJS.call({"math", :add}, [1, 2]) # => {:ok, 3}
+NodeJS.call({"math", :sub}, [1, 2]) # => {:ok, -1}
+```
+
+### There Are Rules & Limitations (Unfortunately)
+
+* Function arguments must be serializable to JSON.
+* Return values must be serializable to JSON. (Objects with circular references will definitely fail.)
+* Modules must be requested relative to the `path` that was given to the `Supervisor`.
+  E.g., for a `path` of `/node_app_root` and a file `/node_app_root/foo/index.js` your module request should be for `"foo/index.js"` or `"foo/index"` or `"foo"`.
+* To reference `node_modules` dependecies, do one of the following:
+  * Make local modules that re-export the functions you want.
+  * Request the module as `"node_modules/<name>"`. (Not `"<name>"` as you would in Node.)
