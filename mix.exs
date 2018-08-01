@@ -59,8 +59,6 @@ defmodule NodeJS.MixProject do
         "LICENSE",
         "CHANGELOG.md",
         "priv/server.js",
-        "priv/client.js",
-        "package.json"
       ],
       maintainers: ["Bryan Joseph", "Luke Ledet", "Joel Wietelmann"],
       licenses: ["MIT"],
