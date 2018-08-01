@@ -1,4 +1,4 @@
-defmodule ReactRender.RenderError do
+defmodule NodeJS.Error do
   @moduledoc """
   Error when unable to render given component
   """

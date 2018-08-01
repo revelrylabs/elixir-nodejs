@@ -1,9 +1,9 @@
-defmodule ReactRender.MixProject do
+defmodule NodeJS.MixProject do
   use Mix.Project
 
   def project do
     [
-      app: :react_render,
+      app: :nodejs,
       version: "2.0.0",
       elixir: "~> 1.6",
       start_permanent: Mix.env() == :prod,
@@ -19,11 +19,11 @@ defmodule ReactRender.MixProject do
       ],
 
       # Docs
-      name: "ReactRender",
-      source_url: "https://github.com/revelrylabs/elixir_react_render",
-      homepage_url: "https://github.com/revelrylabs/elixir_react_render",
+      name: "NodeJS",
+      source_url: "https://github.com/revelrylabs/elixir_node",
+      homepage_url: "https://github.com/revelrylabs/elixir_node",
       # The main page in the docs
-      docs: [main: "ReactRender", extras: ["README.md"]]
+      docs: [main: "NodeJS", extras: ["README.md"]]
     ]
   end
 
@@ -65,7 +65,7 @@ defmodule ReactRender.MixProject do
       maintainers: ["Bryan Joseph", "Luke Ledet"],
       licenses: ["MIT"],
       links: %{
-        "GitHub" => "https://github.com/revelrylabs/elixir_react_render"
+        "GitHub" => "https://github.com/revelrylabs/elixir_node"
       },
       build_tools: ["mix"]
     ]

@@ -1,59 +1,68 @@
-const ReactServer = require('react-dom/server')
-const React = require('react')
+const path = require('path')
 const readline = require('readline')
+const {MODULE_SEARCH_PATH} = process.env
 
-require('babel-polyfill')
-require('babel-register')
+function rewritePath(oldPath) {
+  return oldPath
+  const [_1, _2, relative, name] = oldPath.match(/^((\.\.?)\/)?(.*)$/)
 
-function deleteCache(componentPath) {
-  if (
-    process.env.NODE_ENV !== 'production' &&
-    require.resolve(componentPath) in require.cache
-  ) {
-    delete require.cache[require.resolve(componentPath)]
+  if (relative) {
+    return path.join(MODULE_SEARCH_PATH, relative, name)
+  }
+
+  return path.join(MODULE_SEARCH_PATH, 'node_modules', name)
+}
+
+function requireModule(modulePath) {
+  const newPath = rewritePath(modulePath)
+
+  // When not running in production mode, refresh the cache on each call.
+  if (process.env.NODE_ENV !== 'production') {
+    delete require.cache[require.resolve(newPath)]
+  }
+
+  return require(newPath)
+}
+
+function getAncestor(parent, [key, ...keys]) {
+  if (typeof key === 'undefined') {
+    return parent
+  }
+
+  return getAncestor(parent[key], keys)
+}
+
+function requireModuleFunction([modulePath, ...keys]) {
+  const mod = requireModule(modulePath)
+
+  return getAncestor(mod, keys)
+}
+
+function callModuleFunction(moduleFunction, args) {
+  const fn = requireModuleFunction(moduleFunction)
+  
+  return fn(...args)
+}
+
+function getResponse(string) {
+  try {
+    const [moduleFunction, args] = JSON.parse(string)
+    const result = callModuleFunction(moduleFunction, args)
+
+    return JSON.stringify([true, result])
+  } catch ({message, stack}) {
+    return JSON.stringify([false, `${message}\n${stack}`])
   }
 }
 
-function makeHtml({path, props}) {
-  try {
-    const componentPath = path
+function onLine(string) {
+  const response = getResponse(string)
 
-    // remove from cache in non-production environments
-    // so that we can see changes
-    deleteCache(componentPath)
-
-    const component = require(componentPath)
-    const element = component.default ? component.default : component
-    const createdElement = React.createElement(element, props)
-
-    const markup = ReactServer.renderToString(createdElement)
-
-    const response = {
-      error: null,
-      markup: markup,
-      component: element.name,
-    }
-
-    return response
-  } catch (err) {
-    const response = {
-      error: {
-        type: err.constructor.name,
-        message: err.message,
-        stack: err.stack,
-      },
-      markup: null,
-      component: null,
-    }
-
-    return response
-  }
+  process.stdout.write(response)
 }
 
 function startServer() {
-  process.stdin.on('end', () => {
-    process.exit()
-  })
+  process.stdin.on('end', () => process.exit())
 
   const readLineInterface = readline.createInterface({
     input: process.stdin,
@@ -61,12 +70,7 @@ function startServer() {
     terminal: false,
   })
 
-  readLineInterface.on('line', line => {
-    input = JSON.parse(line)
-    result = makeHtml(input)
-    jsonResult = JSON.stringify(result)
-    process.stdout.write(jsonResult)
-  })
+  readLineInterface.on('line', onLine)
 }
 
 module.exports = {startServer}

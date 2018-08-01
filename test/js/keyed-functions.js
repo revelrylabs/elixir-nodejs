@@ -1,0 +1,37 @@
+const uuid = require('uuid/v4')
+
+function hello(name) {
+  return `Hello, ${name}!`
+}
+
+function add(a, b) {
+  return a + b
+}
+
+function sub(a, b) {
+  return a - b
+}
+
+function throwTypeError() {
+  throw new TypeError('oops')
+}
+
+class Unserializable {
+  constructor() {
+    this.circularRef = this
+  }
+}
+
+function getIncompatibleReturnValue() {
+  return new Unserializable()
+}
+
+function getArgv() {
+  return process.argv
+}
+
+function getEnv() {
+  return process.env
+}
+
+module.exports = {uuid, hello, math: {add, sub}, throwTypeError, getIncompatibleReturnValue, getArgv, getEnv}

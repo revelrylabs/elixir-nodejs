@@ -9,30 +9,30 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Changed
 
-- ReactRender.render/2 now returns `{:safe, html}` so that calls to `raw` in phoenix are no longer needed
+- NodeJS.render/2 now returns `{:safe, html}` so that calls to `raw` in phoenix are no longer needed
 - Configuration now takes a keyword list.
   Old:
 
 ```elixir
-  render_service_path = "assets/js/server.js"
-  worker(ReactRender, [render_service_path])
+  node_service_path = "assets/js/server.js"
+  worker(NodeJS, [node_service_path])
 ```
 
 New:
 
 ```elixir
-  render_service_path = "assets/js/server.js"
-  supervisor(ReactRender, [render_service_path: render_service_path])
+  node_service_path = "assets/js/server.js"
+  supervisor(NodeJS, [node_service_path: node_service_path])
 ```
 
 ### Added
 
-- ReactRender is now a supervisor
+- NodeJS is now a supervisor
 - `pool_size` option to control the number of renderers
 
 ## [1.0.0] - 2018-06-12
 
 ### Added
 
-- ReactRender.get_html/2
-- ReactRender.render/2
+- NodeJS.get_html/2
+- NodeJS.render/2
