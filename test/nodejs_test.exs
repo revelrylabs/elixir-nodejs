@@ -3,10 +3,12 @@ defmodule NodeJS.Test do
   doctest NodeJS
 
   setup_all do
-    __ENV__.file
-    |> Path.dirname()
-    |> Path.join("js")
-    |> NodeJS.start_link()
+    path =
+      __ENV__.file
+      |> Path.dirname()
+      |> Path.join("js")
+
+    NodeJS.start_link(path: path)
 
     :ok
   end

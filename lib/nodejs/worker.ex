@@ -9,20 +9,24 @@ defmodule NodeJS.Worker do
   Starts the Supervisor and underlying node service.
   """
   @spec start_link([binary()]) :: {:ok, pid} | {:error, any()}
-  def start_link([node_service_path, modules_path]) do
-    GenServer.start_link(__MODULE__, [node_service_path, modules_path])
+  def start_link([module_path]) do
+    GenServer.start_link(__MODULE__, module_path)
+  end
+
+  defp node_service_path() do
+    Path.join(:code.priv_dir(:nodejs), "server.js")
   end
 
   # --- GenServer Callbacks ---
   @doc false
-  def init([node_service_path, modules_path]) do
+  def init(module_path) do
     node = System.find_executable("node")
-    port = Port.open({:spawn_executable, node}, env: [{'NODE_PATH', String.to_charlist(modules_path)}], args: [node_service_path])
-    {:ok, [node_service_path, port]}
+    port = Port.open({:spawn_executable, node}, env: [{'NODE_PATH', String.to_charlist(module_path)}], args: [node_service_path()])
+    {:ok, [node_service_path(), port]}
   end
 
   @doc false
-  def handle_call({module, args}, _from, [_, port] = state) when is_tuple(module) and is_list(args) do
+  def handle_call({module, args}, _from, [_, port] = state) when is_tuple(module) do
     body = Jason.encode!([Tuple.to_list(module), args])
     Port.command(port, "#{body}\n")
     response = receive do {_, {:data, data}} -> decode(data) end

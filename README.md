@@ -46,10 +46,7 @@ NodeJS.startServer()
 - Add `NodeJS` to your Supervisor as a child.
 
 ```elixir
-  node_service_path = "assets/js/server.js"
-  pool_size = 4
-
-  supervisor(NodeJS, [node_service_path: node_service_path, pool_size: 4])
+supervisor(NodeJS, path: "/my/node/app/root", pool_size: 4)
 ```
 
 - Call `NodeJS.render/2`
