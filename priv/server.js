@@ -1,6 +1,6 @@
 const path = require('path')
 const readline = require('readline')
-const {MODULE_SEARCH_PATH} = process.env
+const { MODULE_SEARCH_PATH } = process.env
 
 function rewritePath(oldPath) {
   return oldPath
@@ -38,25 +38,30 @@ function requireModuleFunction([modulePath, ...keys]) {
   return getAncestor(mod, keys)
 }
 
-function callModuleFunction(moduleFunction, args) {
+async function callModuleFunction(moduleFunction, args) {
   const fn = requireModuleFunction(moduleFunction)
-  
-  return fn(...args)
+  const returnValue = fn(...args)
+
+  if (returnValue instanceof Promise) {
+    return await returnValue
+  }
+
+  return returnValue
 }
 
-function getResponse(string) {
+async function getResponse(string) {
   try {
     const [moduleFunction, args] = JSON.parse(string)
-    const result = callModuleFunction(moduleFunction, args)
+    const result = await callModuleFunction(moduleFunction, args)
 
     return JSON.stringify([true, result])
-  } catch ({message, stack}) {
+  } catch ({ message, stack }) {
     return JSON.stringify([false, `${message}\n${stack}`])
   }
 }
 
-function onLine(string) {
-  const response = getResponse(string)
+async function onLine(string) {
+  const response = await getResponse(string)
 
   process.stdout.write(response)
 }
@@ -73,7 +78,7 @@ function startServer() {
   readLineInterface.on('line', onLine)
 }
 
-module.exports = {startServer}
+module.exports = { startServer }
 
 if (require.main === module) {
   startServer()

@@ -16,7 +16,9 @@ defmodule NodeJS.Test do
   defp js_error_message(msg) do
     msg
     |> String.split("\n")
-    |> case do [_head, js_error | _tail] -> js_error end
+    |> case do
+      [_head, js_error | _tail] -> js_error
+    end
     |> String.trim()
   end
 
@@ -91,6 +93,27 @@ defmodule NodeJS.Test do
   describe "calling a function in a subdirectory index.js" do
     test "subdirectory" do
       assert {:ok, true} = NodeJS.call("subdirectory")
+    end
+  end
+
+  describe "calling functions that return promises" do
+    test "gets resolved value" do
+      assert {:ok, 1234} = NodeJS.call("slow-async-echo", [1234])
+    end
+
+    test "doesn't cause responses to be delivered out of order" do
+      task1 =
+        Task.async(fn ->
+          NodeJS.call("slow-async-echo", [1111])
+        end)
+
+      task2 =
+        Task.async(fn ->
+          NodeJS.call("default-function-echo", [2222])
+        end)
+
+      assert {:ok, 2222} = Task.await(task2)
+      assert {:ok, 1111} = Task.await(task1)
     end
   end
 end
