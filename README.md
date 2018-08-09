@@ -32,7 +32,7 @@ Add `NodeJS` to your Supervisor as a child, pointing the required `path` option 
 directory containing your JavaScript modules.
 
 ```elixir
-supervisor(NodeJS, path: "/node_app_root", pool_size: 4)
+supervisor(NodeJS, [[path: "/node_app_root", pool_size: 4]])
 ```
 
 ### Calling JavaScript module functions with `NodeJS.call(module, args \\ [])`.
