@@ -116,4 +116,12 @@ defmodule NodeJS.Test do
       assert {:ok, 1111} = Task.await(task1)
     end
   end
+
+  describe "overriding call timeout" do
+    test "works, and you can tell because the slow function will time out" do
+      assert {:error, "Call timed out."} = NodeJS.call("slow-async-echo", [1111], timeout: 0)
+      assert_raise NodeJS.Error, fn -> NodeJS.call!("slow-async-echo", [1111], timeout: 0) end
+      assert {:ok, 1111} = NodeJS.call("slow-async-echo", [1111])
+    end
+  end
 end

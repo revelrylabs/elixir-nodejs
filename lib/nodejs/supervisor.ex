@@ -29,30 +29,35 @@ defmodule NodeJS.Supervisor do
     Supervisor.stop(__MODULE__)
   end
 
-  defp to_transaction(module, args) do
-    fn ->
-      :poolboy.transaction(
-        @pool_name,
-        fn pid -> GenServer.call(pid, {module, args}, @timeout) end,
-        :infinity
-      )
+  defp to_transaction(module, args, opts) do
+    timeout = Keyword.get(opts, :timeout, @timeout)
+
+    func = fn pid ->
+      try do
+        GenServer.call(pid, {module, args}, timeout)
+      catch
+        :exit, {:timeout, {GenServer, :call, _}} ->
+          {:error, "Call timed out."}
+      end
     end
+
+    fn -> :poolboy.transaction(@pool_name, func, :infinity) end
   end
 
-  def call(module, args \\ [])
+  def call(module, args \\ [], opts \\ [])
 
-  def call(module, args) when is_bitstring(module), do: call({module}, args)
+  def call(module, args, opts) when is_bitstring(module), do: call({module}, args, opts)
 
-  def call(module, args) when is_tuple(module) and is_list(args) do
+  def call(module, args, opts) when is_tuple(module) and is_list(args) do
     module
-    |> to_transaction(args)
+    |> to_transaction(args, opts)
     |> Task.async()
     |> Task.await(@timeout)
   end
 
-  def call!(module, args \\ []) do
+  def call!(module, args \\ [], opts \\ []) do
     module
-    |> call(args)
+    |> call(args, opts)
     |> case do
       {:ok, result} -> result
       {:error, message} -> raise NodeJS.Error, message: message
