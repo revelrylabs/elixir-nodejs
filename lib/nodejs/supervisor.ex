@@ -1,7 +1,7 @@
 defmodule NodeJS.Supervisor do
   use Supervisor
 
-  @timeout 10_000
+  @timeout 30_000
   @pool_name :nodejs
   @default_pool_size 4
 
@@ -33,7 +33,7 @@ defmodule NodeJS.Supervisor do
     fn ->
       :poolboy.transaction(
         @pool_name,
-        fn pid -> GenServer.call(pid, {module, args}) end,
+        fn pid -> GenServer.call(pid, {module, args}, @timeout) end,
         :infinity
       )
     end
