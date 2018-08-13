@@ -49,10 +49,12 @@ defmodule NodeJS.Supervisor do
   def call(module, args, opts) when is_bitstring(module), do: call({module}, args, opts)
 
   def call(module, args, opts) when is_tuple(module) and is_list(args) do
+    timeout = Keyword.get(opts, :timeout, @timeout)
+
     module
     |> to_transaction(args, opts)
     |> Task.async()
-    |> Task.await(@timeout)
+    |> Task.await(timeout)
   end
 
   def call!(module, args \\ [], opts \\ []) do
