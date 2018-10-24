@@ -51,10 +51,16 @@ defmodule NodeJS.Supervisor do
   def call(module, args, opts) when is_tuple(module) and is_list(args) do
     timeout = Keyword.get(opts, :timeout, @timeout)
 
-    module
-    |> to_transaction(args, opts)
-    |> Task.async()
-    |> Task.await(timeout)
+    task =
+      module
+      |> to_transaction(args, opts)
+      |> Task.async()
+
+    try do
+      Task.await(task, timeout)
+    catch
+      :exit, {:timeout, _} -> {:error, "Call timed out."}
+    end
   end
 
   def call!(module, args \\ [], opts \\ []) do
