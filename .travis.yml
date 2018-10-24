@@ -14,7 +14,7 @@ install:
   - mix local.hex --force
   - mix local.rebar --force
   - mix deps.get
-  - npm install
+  - (cd test/js/ && npm install)
 script:
   - MIX_ENV=test mix coveralls.travis --pro
 deploy:
