@@ -19,7 +19,7 @@ install:
   - npm install
   - cd ../..
 script:
-  - mix test
+  - MIX_ENV=test mix coveralls.travis --pro
 deploy:
   skip_cleanup: true
   provider: script
