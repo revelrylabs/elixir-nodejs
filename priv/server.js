@@ -1,6 +1,7 @@
 const path = require('path')
 const readline = require('readline')
 const { MODULE_SEARCH_PATH } = process.env
+const WRITE_CHUNK_SIZE = parseInt(process.env.WRITE_CHUNK_SIZE, 10)
 
 function rewritePath(oldPath) {
   return oldPath
@@ -61,9 +62,13 @@ async function getResponse(string) {
 }
 
 async function onLine(string) {
-  const response = await getResponse(string)
+  const buffer = Buffer.from(`${await getResponse(string)}\n`)
 
-  process.stdout.write(response)
+  for (let i = 0; i < buffer.length; i += WRITE_CHUNK_SIZE) {
+    let chunk = buffer.slice(i, i + WRITE_CHUNK_SIZE)
+
+    process.stdout.write(chunk)
+  }
 }
 
 function startServer() {
