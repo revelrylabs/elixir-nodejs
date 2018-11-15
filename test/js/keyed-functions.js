@@ -16,6 +16,10 @@ function throwTypeError() {
   throw new TypeError('oops')
 }
 
+function getBytes(size) {
+  return Buffer.alloc(size)
+}
+
 class Unserializable {
   constructor() {
     this.circularRef = this
@@ -34,4 +38,13 @@ function getEnv() {
   return process.env
 }
 
-module.exports = {uuid, hello, math: {add, sub}, throwTypeError, getIncompatibleReturnValue, getArgv, getEnv}
+module.exports = {
+  uuid,
+  hello,
+  math: { add, sub },
+  throwTypeError,
+  getBytes,
+  getIncompatibleReturnValue,
+  getArgv,
+  getEnv,
+}

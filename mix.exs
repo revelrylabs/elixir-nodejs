@@ -4,7 +4,7 @@ defmodule NodeJS.MixProject do
   def project do
     [
       app: :nodejs,
-      version: "0.2.3",
+      version: "1.0.0",
       elixir: "~> 1.6",
       start_permanent: Mix.env() == :prod,
       deps: deps(),

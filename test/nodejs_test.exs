@@ -1,5 +1,5 @@
 defmodule NodeJS.Test do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
   doctest NodeJS
 
   setup_all do
@@ -20,6 +20,12 @@ defmodule NodeJS.Test do
       [_head, js_error | _tail] -> js_error
     end
     |> String.trim()
+  end
+
+  describe "large payload" do
+    test "does not explode" do
+      NodeJS.call!({"keyed-functions", "getBytes"}, [128_000])
+    end
   end
 
   describe "calling default-function-echo" do
