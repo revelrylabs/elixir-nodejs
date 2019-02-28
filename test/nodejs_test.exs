@@ -130,4 +130,10 @@ defmodule NodeJS.Test do
       assert {:ok, 1111} = NodeJS.call("slow-async-echo", [1111])
     end
   end
+
+  describe "strange characters" do
+    test "are transferred properly between js and elixir" do
+      assert {:ok, "’"} = NodeJS.call("default-function-echo", ["’"])
+    end
+  end
 end
