@@ -133,7 +133,7 @@ defmodule NodeJS.Test do
 
   describe "strange characters" do
     test "are transferred properly between js and elixir" do
-      assert {:ok, "’"} = NodeJS.call("default-function-echo", ["’"])
+      assert {:ok, "’"} = NodeJS.call("default-function-echo", ["’"], binary: true)
     end
   end
 end

@@ -70,6 +70,12 @@ NodeJS.call({"math", :add}, [1, 2]) # => {:ok, 3}
 NodeJS.call({"math", :sub}, [1, 2]) # => {:ok, -1}
 ```
 
+In order to cope with Unicode character it is necessary to specify the `binary` option:
+
+```elixir
+NodeJS.call("echo", ["’"], binary: true) # => {:ok, "’"}
+```
+
 ### There Are Rules & Limitations (Unfortunately)
 
 * Function arguments must be serializable to JSON.
