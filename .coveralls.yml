@@ -1,0 +1,2 @@
+multi:
+  excoveralls: cover/excoveralls.json
