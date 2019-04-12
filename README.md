@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.org/revelrylabs/elixir-nodejs.svg?branch=master)](https://travis-ci.org/revelrylabs/elixir-nodejs)
 [![Hex.pm](https://img.shields.io/hexpm/dt/nodejs.svg)](https://hex.pm/packages/nodejs)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Coverage Status](https://coveralls.io/repos/github/revelrylabs/elixir-nodejs/badge.svg?branch=master)](https://coveralls.io/github/revelrylabs/elixir-nodejs?branch=master)
+[![Coverage Status](https://opencov.prod.revelry.net/projects/14/badge.svg)](https://opencov.prod.revelry.net/projects/14)
 
 Provides an Elixir API for calling Node.js functions.
 
@@ -14,8 +14,8 @@ be found at [https://hexdocs.pm/nodejs](https://hexdocs.pm/nodejs).
 
 ## Prerequisites
 
-* Elixir >= 1.6
-* NodeJS >= 10
+- Elixir >= 1.6
+- NodeJS >= 10
 
 ## Installation
 
@@ -72,10 +72,10 @@ NodeJS.call({"math", :sub}, [1, 2]) # => {:ok, -1}
 
 ### There Are Rules & Limitations (Unfortunately)
 
-* Function arguments must be serializable to JSON.
-* Return values must be serializable to JSON. (Objects with circular references will definitely fail.)
-* Modules must be requested relative to the `path` that was given to the `Supervisor`.
+- Function arguments must be serializable to JSON.
+- Return values must be serializable to JSON. (Objects with circular references will definitely fail.)
+- Modules must be requested relative to the `path` that was given to the `Supervisor`.
   E.g., for a `path` of `/node_app_root` and a file `/node_app_root/foo/index.js` your module request should be for `"foo/index.js"` or `"foo/index"` or `"foo"`.
-* To reference `node_modules` dependecies, do one of the following:
-  * Make local modules that re-export the functions you want.
-  * Request the module as `"node_modules/<name>"`. (Not `"<name>"` as you would in Node.)
+- To reference `node_modules` dependecies, do one of the following:
+  - Make local modules that re-export the functions you want.
+  - Request the module as `"node_modules/<name>"`. (Not `"<name>"` as you would in Node.)
