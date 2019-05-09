@@ -39,7 +39,7 @@ defmodule NodeJS.MixProject do
     [
       {:jason, "~> 1.0"},
       {:ex_doc, "~> 0.20.0", only: :dev},
-      {:excoveralls, "~> 0.10.4", only: :test},
+      {:excoveralls, "~> 0.11.0", only: :test},
       {:poolboy, "~> 1.5.1"}
     ]
   end
