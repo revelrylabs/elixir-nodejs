@@ -69,6 +69,7 @@ You can call them like this:
 NodeJS.call({"math", :add}, [1, 2]) # => {:ok, 3}
 NodeJS.call({"math", :sub}, [1, 2]) # => {:ok, -1}
 ```
+
 ### There Are Rules & Limitations (Unfortunately)
 
 - Function arguments must be serializable to JSON.
