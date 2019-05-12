@@ -69,7 +69,6 @@ You can call them like this:
 NodeJS.call({"math", :add}, [1, 2]) # => {:ok, 3}
 NodeJS.call({"math", :sub}, [1, 2]) # => {:ok, -1}
 ```
-
 ### There Are Rules & Limitations (Unfortunately)
 
 - Function arguments must be serializable to JSON.
@@ -79,3 +78,17 @@ NodeJS.call({"math", :sub}, [1, 2]) # => {:ok, -1}
 - To reference `node_modules` dependecies, do one of the following:
   - Make local modules that re-export the functions you want.
   - Request the module as `"node_modules/<name>"`. (Not `"<name>"` as you would in Node.)
+
+### Running the tests
+
+  Since the test suite requires npm dependencies before you can run the tests you will first need to run
+
+  ```bash
+  cd test/js && npm install && cd ../..
+  ```
+
+  After that you should be able to run
+
+  ```bash
+  mix test
+  ```
