@@ -16,8 +16,18 @@ defmodule NodeJS.Worker do
     GenServer.start_link(__MODULE__, module_path)
   end
 
+  # Node.js REPL Service
   defp node_service_path() do
     Path.join(:code.priv_dir(:nodejs), "server.js")
+  end
+
+  # Specifies the NODE_PATH for the REPL service to require modules from. We specify
+  # both the root path and `/node_modules` folder relative to the root path. This is
+  # to specify the entry point that the REPL service runs code from.
+  defp node_path(module_path) do
+    [module_path, module_path <> "/node_modules"]
+    |> Enum.join(":")
+    |> String.to_charlist()
   end
 
   # --- GenServer Callbacks ---
@@ -30,7 +40,7 @@ defmodule NodeJS.Worker do
         {:spawn_executable, node},
         line: @read_chunk_size,
         env: [
-          {'NODE_PATH', String.to_charlist(module_path)},
+          {'NODE_PATH', node_path(module_path)},
           {'WRITE_CHUNK_SIZE', String.to_charlist("#{@read_chunk_size}")}
         ],
         args: [node_service_path()]
