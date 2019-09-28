@@ -1,28 +1,14 @@
 const path = require('path')
 const readline = require('readline')
-const { MODULE_SEARCH_PATH } = process.env
 const WRITE_CHUNK_SIZE = parseInt(process.env.WRITE_CHUNK_SIZE, 10)
 
-function rewritePath(oldPath) {
-  return oldPath
-  const [_1, _2, relative, name] = oldPath.match(/^((\.\.?)\/)?(.*)$/)
-
-  if (relative) {
-    return path.join(MODULE_SEARCH_PATH, relative, name)
-  }
-
-  return path.join(MODULE_SEARCH_PATH, 'node_modules', name)
-}
-
 function requireModule(modulePath) {
-  const newPath = rewritePath(modulePath)
-
   // When not running in production mode, refresh the cache on each call.
   if (process.env.NODE_ENV !== 'production') {
-    delete require.cache[require.resolve(newPath)]
+    delete require.cache[require.resolve(modulePath)]
   }
 
-  return require(newPath)
+  return require(modulePath)
 }
 
 function getAncestor(parent, [key, ...keys]) {
