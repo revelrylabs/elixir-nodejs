@@ -51,13 +51,22 @@ defmodule NodeJS.Worker do
     end
   end
 
+  defp decode_binary(data, binary) do
+    if binary === true do
+      :binary.list_to_bin(data)
+    else
+      data
+    end
+  end
+
   @doc false
-  def handle_call({module, args}, _from, [_, port] = state) when is_tuple(module) do
+  def handle_call({module, args, binary}, _from, [_, port] = state) when is_tuple(module) do
     body = Jason.encode!([Tuple.to_list(module), args])
     Port.command(port, "#{body}\n")
 
     response =
       get_response()
+      |> decode_binary(binary)
       |> decode()
 
     {:reply, response, state}
