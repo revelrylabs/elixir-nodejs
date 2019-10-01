@@ -82,9 +82,6 @@ NodeJS.call("echo", ["’"], binary: true) # => {:ok, "’"}
 - Return values must be serializable to JSON. (Objects with circular references will definitely fail.)
 - Modules must be requested relative to the `path` that was given to the `Supervisor`.
   E.g., for a `path` of `/node_app_root` and a file `/node_app_root/foo/index.js` your module request should be for `"foo/index.js"` or `"foo/index"` or `"foo"`.
-- To reference `node_modules` dependecies, do one of the following:
-  - Make local modules that re-export the functions you want.
-  - Request the module as `"node_modules/<name>"`. (Not `"<name>"` as you would in Node.)
 
 ### Running the tests
 
