@@ -69,14 +69,14 @@ defmodule NodeJS.Test do
   describe "calling keyed-functions getIncompatibleReturnValue" do
     test "returns a JSON.stringify error" do
       assert {:error, msg} = NodeJS.call({"keyed-functions", :getIncompatibleReturnValue})
-      assert js_error_message(msg) === "TypeError: Converting circular structure to JSON"
+      assert msg =~ "Converting circular structure to JSON"
     end
   end
 
   describe "calling things that are not functions: " do
     test "module does not exist" do
       assert {:error, msg} = NodeJS.call("idontexist")
-      assert js_error_message(msg) === "Error: Cannot find module 'idontexist'"
+      assert msg =~ "Error: Cannot find module 'idontexist'"
     end
 
     test "function does not exist" do
