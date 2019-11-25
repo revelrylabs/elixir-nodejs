@@ -38,7 +38,7 @@ defmodule NodeJS.MixProject do
   defp deps do
     [
       {:ex_doc, "~> 0.20.0", only: :dev},
-      {:excoveralls, "~> 0.11.0", only: :test},
+      {:excoveralls, "~> 0.12.1", only: :test},
       {:jason, "~> 1.0"},
       {:poolboy, "~> 1.5.1"}
     ]
