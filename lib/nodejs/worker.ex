@@ -26,8 +26,15 @@ defmodule NodeJS.Worker do
   # to specify the entry point that the REPL service runs code from.
   defp node_path(module_path) do
     [module_path, module_path <> "/node_modules"]
-    |> Enum.join(":")
+    |> Enum.join(node_path_separator())
     |> String.to_charlist()
+  end
+
+  defp node_path_separator do
+    case :os.type() do
+      {:win32, _} -> ";"
+      _ -> ":"
+    end
   end
 
   # --- GenServer Callbacks ---
