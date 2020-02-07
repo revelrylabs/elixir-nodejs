@@ -2,7 +2,7 @@ defmodule NodeJS.Supervisor do
   use Supervisor
 
   @timeout 30_000
-  @pool_name :nodejs
+  @default_pool_name :nodejs
   @default_pool_size 4
 
   @moduledoc """
@@ -15,10 +15,11 @@ defmodule NodeJS.Supervisor do
   ## Options
     * `:path` - (required) The path to your Node.js code's root directory.
     * `:pool_size` - (optional) The number of workers. Defaults to #{@default_pool_size}.
+    * `:name` - (optional) If there are multiple NodeJS supervisors, give then different names.
   """
   @spec start_link(keyword()) :: {:ok, pid} | {:error, any()}
   def start_link(opts \\ []) do
-    Supervisor.start_link(__MODULE__, opts, name: __MODULE__)
+    Supervisor.start_link(__MODULE__, opts, name: Keyword.get(opts, :name, __MODULE__))
   end
 
   @doc """
@@ -42,7 +43,11 @@ defmodule NodeJS.Supervisor do
       end
     end
 
-    fn -> :poolboy.transaction(@pool_name, func, :infinity) end
+    fn -> :poolboy.transaction(get_pool_name(opts), func, :infinity) end
+  end
+
+  defp get_pool_name(opts) do
+    String.to_atom("pool_" <> to_string(Keyword.get(opts, :name, @default_pool_name)))
   end
 
   def call(module, args \\ [], opts \\ [])
@@ -78,16 +83,17 @@ defmodule NodeJS.Supervisor do
   def init(opts) do
     path = Keyword.fetch!(opts, :path)
     pool_size = Keyword.get(opts, :pool_size, @default_pool_size)
+    pool_name = get_pool_name(opts)
 
     pool_opts = [
-      name: {:local, @pool_name},
+      name: {:local, pool_name},
       worker_module: NodeJS.Worker,
       size: pool_size,
       max_overflow: 0
     ]
 
     children = [
-      :poolboy.child_spec(@pool_name, pool_opts, [path])
+      :poolboy.child_spec(pool_name, pool_opts, [path])
     ]
 
     opts = [strategy: :one_for_one]
