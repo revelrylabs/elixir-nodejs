@@ -84,10 +84,11 @@ defmodule NodeJS.Supervisor do
     path = Keyword.fetch!(opts, :path)
     pool_size = Keyword.get(opts, :pool_size, @default_pool_size)
     pool_name = get_pool_name(opts)
+    worker = Keyword.get(opts, :worker, NodeJS.Worker)
 
     pool_opts = [
       name: {:local, pool_name},
-      worker_module: NodeJS.Worker,
+      worker_module: worker,
       size: pool_size,
       max_overflow: 0
     ]

@@ -11,9 +11,9 @@ defmodule NodeJS.Worker do
   @doc """
   Starts the Supervisor and underlying node service.
   """
-  @spec start_link([binary()]) :: {:ok, pid} | {:error, any()}
-  def start_link([module_path]) do
-    GenServer.start_link(__MODULE__, module_path)
+  @spec start_link([binary()], any()) :: {:ok, pid} | {:error, any()}
+  def start_link([module_path], opts \\ []) do
+    GenServer.start_link(__MODULE__, module_path, name: Keyword.get(opts, :name))
   end
 
   # Node.js REPL Service
