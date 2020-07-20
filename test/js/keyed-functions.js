@@ -38,6 +38,12 @@ function getEnv() {
   return process.env
 }
 
+function logsSomething() {
+  console.log("Something")
+  process.stdout.write("something else")
+  return 42
+}
+
 module.exports = {
   uuid,
   hello,
@@ -47,4 +53,5 @@ module.exports = {
   getIncompatibleReturnValue,
   getArgv,
   getEnv,
+  logsSomething
 }
