@@ -39,6 +39,9 @@ defmodule NodeJS.Supervisor do
       catch
         :exit, {:timeout, {GenServer, :call, _}} ->
           {:error, "Call timed out."}
+
+        :exit, other_error ->
+          {:error, {:node_js_worker_exit, other_error}}
       end
     end
 
