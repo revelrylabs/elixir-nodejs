@@ -143,5 +143,26 @@ defmodule NodeJS.Test do
 
       refute_receive {_ref, {:error, "Call timed out."}}, 50
     end
+
+    test "Crashes do not bring down the calling process" do
+      own_pid = self()
+
+      Task.async(fn ->
+        {:error, _err} = NodeJS.call("slow-async-echo", [1111])
+        # Make sure we reach this line
+        Process.send(own_pid, :received_error, [])
+      end)
+
+      # Abuse internal APIs / implementation details to find and kill the worker process.
+      # Since we don't know which is which, we just kill them all.
+      [{_, child_pid, _, _} | _rest] = Supervisor.which_children(NodeJS.Supervisor)
+      workers = GenServer.call(child_pid, :get_all_workers)
+
+      Enum.each(workers, fn {_, worker_pid, _, _} ->
+        Process.exit(worker_pid, :kill)
+      end)
+
+      assert_receive :received_error, 50
+    end
   end
 end
