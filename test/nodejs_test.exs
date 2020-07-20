@@ -136,4 +136,12 @@ defmodule NodeJS.Test do
       assert {:ok, "’"} = NodeJS.call("default-function-echo", ["’"], binary: true)
     end
   end
+
+  describe "Implementation details shouldn't leak:" do
+    test "Timeouts do not send stray messages to calling process" do
+      assert {:error, "Call timed out."} = NodeJS.call("slow-async-echo", [1111], timeout: 0)
+
+      refute_receive {_ref, {:error, "Call timed out."}}, 50
+    end
+  end
 end
