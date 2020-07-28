@@ -2,13 +2,13 @@ defmodule NodeJS.Test do
   use ExUnit.Case, async: true
   doctest NodeJS
 
-  setup_all do
+  setup do
     path =
       __ENV__.file
       |> Path.dirname()
       |> Path.join("js")
 
-    NodeJS.start_link(path: path)
+    start_supervised({NodeJS.Supervisor, path: path})
 
     :ok
   end
