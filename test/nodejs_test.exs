@@ -121,6 +121,53 @@ defmodule NodeJS.Test do
       assert {:ok, 2222} = Task.await(task2)
       assert {:ok, 1111} = Task.await(task1)
     end
+
+    test "can't block js workers" do
+      own_pid = self()
+
+      # Call a few js functions that are slow to reply
+      task1 =
+        Task.async(fn ->
+          res = NodeJS.call("slow-async-echo", [1111, 60_000], timeout: 1)
+          Process.send(own_pid, :received_timeout_1, [])
+          res
+        end)
+
+      task2 =
+        Task.async(fn ->
+          res = NodeJS.call("slow-async-echo", [1112, 60_000], timeout: 1)
+          Process.send(own_pid, :received_timeout_2, [])
+          res
+        end)
+
+      task3 =
+        Task.async(fn ->
+          res = NodeJS.call("slow-async-echo", [1113, 60_000], timeout: 1)
+          Process.send(own_pid, :received_timeout_3, [])
+          res
+        end)
+
+      task4 =
+        Task.async(fn ->
+          res = NodeJS.call("slow-async-echo", [1114, 60_000], timeout: 1)
+          Process.send(own_pid, :received_timeout_4, [])
+          res
+        end)
+
+      # After 10ms, we definitely should have received all timeout messages
+      assert_receive :received_timeout_1, 10
+      assert_receive :received_timeout_2, 10
+      assert_receive :received_timeout_3, 10
+      assert_receive :received_timeout_4, 10
+
+      assert {:error, "Call timed out."} = Task.await(task1)
+      assert {:error, "Call timed out."} = Task.await(task2)
+      assert {:error, "Call timed out."} = Task.await(task3)
+      assert {:error, "Call timed out."} = Task.await(task4)
+
+      # We should still get an answer here, before the timeout
+      assert {:ok, 1115} = NodeJS.call("slow-async-echo", [1115, 1])
+    end
   end
 
   describe "overriding call timeout" do
