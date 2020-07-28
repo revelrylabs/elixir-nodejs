@@ -35,8 +35,11 @@ defmodule NodeJS.Supervisor do
 
     func = fn pid ->
       try do
-        GenServer.call(pid, {module, args, binary}, :infinity)
+        GenServer.call(pid, {module, args, [binary: binary, timeout: timeout]}, timeout)
       catch
+        :exit, {:timeout, _} ->
+          {:error, "Call timed out."}
+
         :exit, error ->
           {:error, {:node_js_worker_exit, error}}
       end
