@@ -12,7 +12,7 @@ defmodule NodeJS.Supervisor do
   Starts the Node.js supervisor and workers.
 
   ## Options
-    * `:name` - (optional) If there are multiple NodeJS supervisors, give then different names.
+    * `:name` - (optional) The name used for supervisor registration. Defaults to #{__MODULE__}.
     * `:path` - (required) The path to your Node.js code's root directory.
     * `:pool_size` - (optional) The number of workers. Defaults to #{@default_pool_size}.
   """
