@@ -2,7 +2,6 @@ defmodule NodeJS.Supervisor do
   use Supervisor
 
   @timeout 30_000
-  @pool_name :nodejs
   @default_pool_size 4
 
   @moduledoc """
@@ -13,12 +12,13 @@ defmodule NodeJS.Supervisor do
   Starts the Node.js supervisor and workers.
 
   ## Options
+    * `:name` - (optional) The name used for supervisor registration. Defaults to #{__MODULE__}.
     * `:path` - (required) The path to your Node.js code's root directory.
     * `:pool_size` - (optional) The number of workers. Defaults to #{@default_pool_size}.
   """
   @spec start_link(keyword()) :: {:ok, pid} | {:error, any()}
   def start_link(opts \\ []) do
-    Supervisor.start_link(__MODULE__, opts, name: __MODULE__)
+    Supervisor.start_link(__MODULE__, opts, name: supervisor_name(opts))
   end
 
   @doc """
@@ -30,8 +30,8 @@ defmodule NodeJS.Supervisor do
   end
 
   defp run_in_transaction(module, args, opts) do
-    timeout = Keyword.get(opts, :timeout, @timeout)
     binary = Keyword.get(opts, :binary, false)
+    timeout = Keyword.get(opts, :timeout, @timeout)
 
     func = fn pid ->
       try do
@@ -45,7 +45,18 @@ defmodule NodeJS.Supervisor do
       end
     end
 
-    :poolboy.transaction(@pool_name, func, timeout)
+    pool_name = supervisor_pool(opts)
+    :poolboy.transaction(pool_name, func, timeout)
+  end
+
+  defp supervisor_name(opts) do
+    Keyword.get(opts, :name, __MODULE__)
+  end
+
+  defp supervisor_pool(opts) do
+    opts
+    |> Keyword.get(:name, __MODULE__)
+    |> Module.concat(Pool)
   end
 
   def call(module, args \\ [], opts \\ [])
@@ -74,17 +85,19 @@ defmodule NodeJS.Supervisor do
   @doc false
   def init(opts) do
     path = Keyword.fetch!(opts, :path)
+    pool_name = supervisor_pool(opts)
     pool_size = Keyword.get(opts, :pool_size, @default_pool_size)
+    worker = Keyword.get(opts, :worker, NodeJS.Worker)
 
     pool_opts = [
-      name: {:local, @pool_name},
-      worker_module: NodeJS.Worker,
+      max_overflow: 0,
+      name: {:local, pool_name},
       size: pool_size,
-      max_overflow: 0
+      worker_module: worker
     ]
 
     children = [
-      :poolboy.child_spec(@pool_name, pool_opts, [path])
+      :poolboy.child_spec(pool_name, pool_opts, [path])
     ]
 
     opts = [strategy: :one_for_one]
