@@ -2,7 +2,6 @@ defmodule NodeJS.Supervisor do
   use Supervisor
 
   @timeout 30_000
-  @default_pool_name :nodejs
   @default_pool_size 4
 
   @moduledoc """
@@ -13,13 +12,13 @@ defmodule NodeJS.Supervisor do
   Starts the Node.js supervisor and workers.
 
   ## Options
+    * `:name` - (optional) If there are multiple NodeJS supervisors, give then different names.
     * `:path` - (required) The path to your Node.js code's root directory.
     * `:pool_size` - (optional) The number of workers. Defaults to #{@default_pool_size}.
-    * `:name` - (optional) If there are multiple NodeJS supervisors, give then different names.
   """
   @spec start_link(keyword()) :: {:ok, pid} | {:error, any()}
   def start_link(opts \\ []) do
-    Supervisor.start_link(__MODULE__, opts, name: Keyword.get(opts, :name, __MODULE__))
+    Supervisor.start_link(__MODULE__, opts, name: supervisor_name(opts))
   end
 
   @doc """
@@ -31,8 +30,9 @@ defmodule NodeJS.Supervisor do
   end
 
   defp to_transaction(module, args, opts) do
-    timeout = Keyword.get(opts, :timeout, @timeout)
+    pool = supervisor_pool(opts)
     binary = Keyword.get(opts, :binary, false)
+    timeout = Keyword.get(opts, :timeout, @timeout)
 
     func = fn pid ->
       try do
@@ -43,11 +43,17 @@ defmodule NodeJS.Supervisor do
       end
     end
 
-    fn -> :poolboy.transaction(get_pool_name(opts), func, :infinity) end
+    fn -> :poolboy.transaction(pool, func, :infinity) end
   end
 
-  defp get_pool_name(opts) do
-    String.to_atom("pool_" <> to_string(Keyword.get(opts, :name, @default_pool_name)))
+  defp supervisor_name(opts) do
+    Keyword.get(opts, :name, __MODULE__)
+  end
+
+  defp supervisor_pool(opts) do
+    opts
+    |> Keyword.get(:name, __MODULE__)
+    |> Module.concat(Pool)
   end
 
   def call(module, args \\ [], opts \\ [])
@@ -82,15 +88,15 @@ defmodule NodeJS.Supervisor do
   @doc false
   def init(opts) do
     path = Keyword.fetch!(opts, :path)
+    pool_name = supervisor_pool(opts)
     pool_size = Keyword.get(opts, :pool_size, @default_pool_size)
-    pool_name = get_pool_name(opts)
     worker = Keyword.get(opts, :worker, NodeJS.Worker)
 
     pool_opts = [
+      max_overflow: 0,
       name: {:local, pool_name},
-      worker_module: worker,
       size: pool_size,
-      max_overflow: 0
+      worker_module: worker
     ]
 
     children = [
