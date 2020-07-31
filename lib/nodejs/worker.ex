@@ -56,15 +56,18 @@ defmodule NodeJS.Worker do
     {:ok, [node_service_path(), port]}
   end
 
-  defp get_response(data \\ '') do
+  defp get_response(data, timeout) do
     receive do
       {_, {:data, {flag, chunk}}} ->
         data = data ++ chunk
 
         case flag do
-          :noeol -> get_response(data)
-          :eol -> data
+          :noeol -> get_response(data, timeout)
+          :eol -> {:ok, data}
         end
+    after
+      timeout ->
+        {:error, :timeout}
     end
   end
 
@@ -77,16 +80,25 @@ defmodule NodeJS.Worker do
   end
 
   @doc false
-  def handle_call({module, args, binary}, _from, [_, port] = state) when is_tuple(module) do
+  def handle_call({module, args, opts}, _from, [_, port] = state)
+      when is_tuple(module) do
+    timeout = Keyword.get(opts, :timeout)
+    binary = Keyword.get(opts, :binary)
     body = Jason.encode!([Tuple.to_list(module), args])
     Port.command(port, "#{body}\n")
 
-    response =
-      get_response()
-      |> decode_binary(binary)
-      |> decode()
+    case get_response('', timeout) do
+      {:ok, response} ->
+        decoded_response =
+          response
+          |> decode_binary(binary)
+          |> decode()
 
-    {:reply, response, state}
+        {:reply, decoded_response, state}
+
+      {:error, :timeout} ->
+        {:reply, {:error, :timeout}, state}
+    end
   end
 
   defp decode(data) do

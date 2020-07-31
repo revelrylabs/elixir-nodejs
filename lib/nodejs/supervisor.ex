@@ -29,21 +29,24 @@ defmodule NodeJS.Supervisor do
     Supervisor.stop(__MODULE__)
   end
 
-  defp to_transaction(module, args, opts) do
-    pool = supervisor_pool(opts)
+  defp run_in_transaction(module, args, opts) do
     binary = Keyword.get(opts, :binary, false)
     timeout = Keyword.get(opts, :timeout, @timeout)
 
     func = fn pid ->
       try do
-        GenServer.call(pid, {module, args, binary}, timeout)
+        GenServer.call(pid, {module, args, [binary: binary, timeout: timeout]}, timeout)
       catch
-        :exit, {:timeout, {GenServer, :call, _}} ->
+        :exit, {:timeout, _} ->
           {:error, "Call timed out."}
+
+        :exit, error ->
+          {:error, {:node_js_worker_exit, error}}
       end
     end
 
-    fn -> :poolboy.transaction(pool, func, :infinity) end
+    pool_name = supervisor_pool(opts)
+    :poolboy.transaction(pool_name, func, timeout)
   end
 
   defp supervisor_name(opts) do
@@ -61,17 +64,11 @@ defmodule NodeJS.Supervisor do
   def call(module, args, opts) when is_bitstring(module), do: call({module}, args, opts)
 
   def call(module, args, opts) when is_tuple(module) and is_list(args) do
-    timeout = Keyword.get(opts, :timeout, @timeout)
-
-    task =
-      module
-      |> to_transaction(args, opts)
-      |> Task.async()
-
     try do
-      Task.await(task, timeout)
+      run_in_transaction(module, args, opts)
     catch
-      :exit, {:timeout, _} -> {:error, "Call timed out."}
+      :exit, {:timeout, _} ->
+        {:error, "Call timed out."}
     end
   end
 
