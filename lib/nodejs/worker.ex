@@ -4,6 +4,11 @@ defmodule NodeJS.Worker do
   # Port can't do more than this.
   @read_chunk_size 65_536
 
+  # This random looking string makes sure that other things writing to
+  # stdout do not interfere with the protocol that we rely on here.
+  # All protocol messages start with this string.
+  @prefix '__elixirnodejs__UOSBsDUP6bp9IF5__'
+
   @moduledoc """
   A genserver that controls the starting of the node service
   """
@@ -62,8 +67,17 @@ defmodule NodeJS.Worker do
         data = data ++ chunk
 
         case flag do
-          :noeol -> get_response(data, timeout)
-          :eol -> {:ok, data}
+          :noeol ->
+            get_response(data, timeout)
+
+          :eol ->
+            case data do
+              @prefix ++ protocol_data ->
+                {:ok, protocol_data}
+
+              _ ->
+                get_response('', timeout)
+            end
         end
     after
       timeout ->
