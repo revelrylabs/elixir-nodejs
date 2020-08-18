@@ -212,4 +212,10 @@ defmodule NodeJS.Test do
       assert_receive :received_error, 50
     end
   end
+
+  describe "console.log statements" do
+    test "don't crash NodeJS process" do
+      assert {:ok, 42} = NodeJS.call({"keyed-functions", :logsSomething}, [])
+    end
+  end
 end
