@@ -22,7 +22,7 @@ be found at [https://hexdocs.pm/nodejs](https://hexdocs.pm/nodejs).
 ```elixir
 def deps do
   [
-    {:nodejs, "~> 1.0"}
+    {:nodejs, "~> 2.0"}
   ]
 end
 ```
