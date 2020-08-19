@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 - support for GenServer name registration to support multiple supervisors
 
+### Changed
+- updated Elixir requirements to 1.7
+
 ### Fixed
 - `Task.async` and `Task.await` caller leaks with timeouts and worker crash
 - `console.*` calls in JavaScript code no longer causes workers to crash
