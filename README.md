@@ -14,7 +14,7 @@ be found at [https://hexdocs.pm/nodejs](https://hexdocs.pm/nodejs).
 
 ## Prerequisites
 
-- Elixir >= 1.6
+- Elixir >= 1.7
 - NodeJS >= 10
 
 ## Installation
