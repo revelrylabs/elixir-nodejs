@@ -111,8 +111,13 @@ defmodule NodeJS.Worker do
         {:reply, decoded_response, state}
 
       {:error, :timeout} ->
-        {:reply, {:error, :timeout}, state}
+        {:noreply, state}
     end
+  end
+
+  # we continue with the process loop and discard the slow reply
+  def handle_info(_reply, state) do
+    {:noreply, state}
   end
 
   defp decode(data) do
