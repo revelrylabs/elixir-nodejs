@@ -1,6 +1,8 @@
 defmodule NodeJS.Worker do
   use GenServer
 
+  require Logger
+
   # Port can't do more than this.
   @read_chunk_size 65_536
 
@@ -75,7 +77,11 @@ defmodule NodeJS.Worker do
               @prefix ++ protocol_data ->
                 {:ok, protocol_data}
 
-              _ ->
+              [] ->
+                get_response('', timeout)
+
+              message ->
+                Logger.debug(message)
                 get_response('', timeout)
             end
         end
