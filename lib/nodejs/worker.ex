@@ -121,6 +121,14 @@ defmodule NodeJS.Worker do
     end
   end
 
+  def handle_info({_, {:data, {:eol, message}}}, state) do
+    if message != [] do
+      Logger.debug(message)
+    end
+
+    {:noreply, state}
+  end
+
   defp decode(data) do
     data
     |> to_string()
