@@ -37,7 +37,7 @@ defmodule NodeJS.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:ex_doc, "~> 0.22.0", only: :dev},
+      {:ex_doc, "~> 0.25.1", only: :dev},
       {:excoveralls, "~> 0.13.0", only: :test},
       {:jason, "~> 1.0"},
       {:poolboy, "~> 1.5.1"}
