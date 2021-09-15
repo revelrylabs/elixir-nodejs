@@ -96,3 +96,19 @@ NodeJS.call("echo", ["’"], binary: true) # => {:ok, "’"}
   ```bash
   mix test
   ```
+
+### Handling Callbacks and Promises  
+
+You can see examples of using promises in the tests here:
+
+https://github.com/revelrylabs/elixir-nodejs/blob/master/test/nodejs_test.exs#L125
+
+and from the JavaScript code here:
+
+```
+module.exports = async function echo(x, delay = 1000) {
+  return new Promise((resolve) => setTimeout(() => resolve(x), delay))
+}
+```
+
+https://github.com/revelrylabs/elixir-nodejs/blob/master/test/js/slow-async-echo.js
