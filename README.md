@@ -96,11 +96,6 @@ NodeJS.call("echo", ["’"], binary: true) # => {:ok, "’"}
   ```bash
   mix test
   ```
-After that you should be able to run
-
-  ```bash
-  mix test
-  ```
 
 ### Handling Callbacks and Promises  
 
