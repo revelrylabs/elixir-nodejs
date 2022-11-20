@@ -5,7 +5,7 @@ defmodule NodeJS.MixProject do
     [
       app: :nodejs,
       version: "2.0.0",
-      elixir: "~> 1.7",
+      elixir: "~> 1.14",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       description: description(),
