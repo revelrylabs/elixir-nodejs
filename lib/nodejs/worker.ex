@@ -117,6 +117,7 @@ defmodule NodeJS.Worker do
 
   defp decode(data) do
     data
+    |> IO.iodata_to_binary()
     |> to_string()
     |> Jason.decode!()
     |> case do
