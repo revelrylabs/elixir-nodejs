@@ -218,4 +218,11 @@ defmodule NodeJS.Test do
       assert {:ok, 42} = NodeJS.call({"keyed-functions", :logsSomething}, [])
     end
   end
+
+  describe "utf-8 chars in response" do
+    test "using string instead of binary" do
+      assert {:ok, %{"lang1" => "中文", "lang2" => "hełło"}} =
+               NodeJS.call({"keyed-functions", :returnUTF8String}, [])
+    end
+  end
 end

@@ -44,6 +44,10 @@ function logsSomething() {
   return 42
 }
 
+function returnUTF8String() {
+  return {lang1: "中文", lang2: "hełło"}
+}
+
 module.exports = {
   uuid,
   hello,
@@ -53,5 +57,6 @@ module.exports = {
   getIncompatibleReturnValue,
   getArgv,
   getEnv,
-  logsSomething
+  logsSomething,
+  returnUTF8String
 }
