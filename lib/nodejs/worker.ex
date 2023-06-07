@@ -17,8 +17,9 @@ defmodule NodeJS.Worker do
   Starts the Supervisor and underlying node service.
   """
   @spec start_link([binary()], any()) :: {:ok, pid} | {:error, any()}
-  def start_link([module_path], opts \\ []) do
-    GenServer.start_link(__MODULE__, module_path, name: Keyword.get(opts, :name))
+  def start_link([module_path, unsecure_tls], opts \\ []) do
+    IO.inspect(unsecure_tls, label: "we got it")
+    GenServer.start_link(__MODULE__, [module_path, unsecure_tls], name: Keyword.get(opts, :name))
   end
 
   # Node.js REPL Service
@@ -44,7 +45,7 @@ defmodule NodeJS.Worker do
 
   # --- GenServer Callbacks ---
   @doc false
-  def init(module_path) do
+  def init([module_path, unsecure_tls]) do
     node = System.find_executable("node")
 
     port =
@@ -53,7 +54,8 @@ defmodule NodeJS.Worker do
         line: @read_chunk_size,
         env: [
           {'NODE_PATH', node_path(module_path)},
-          {'WRITE_CHUNK_SIZE', String.to_charlist("#{@read_chunk_size}")}
+          {'WRITE_CHUNK_SIZE', String.to_charlist("#{@read_chunk_size}")},
+          {'NODE_TLS_REJECT_UNAUTHORIZED', String.to_charlist(unsecure_tls)}
         ],
         args: [node_service_path()]
       )
@@ -98,7 +100,8 @@ defmodule NodeJS.Worker do
       when is_tuple(module) do
     timeout = Keyword.get(opts, :timeout)
     binary = Keyword.get(opts, :binary)
-    body = Jason.encode!([Tuple.to_list(module), args])
+
+    body = :jiffy.encode([Tuple.to_list(module), args])
     Port.command(port, "#{body}\n")
 
     case get_response('', timeout) do
@@ -118,7 +121,7 @@ defmodule NodeJS.Worker do
   defp decode(data) do
     data
     |> to_string()
-    |> Jason.decode!()
+    |> :jiffy.decode([:return_maps])
     |> case do
       [true, success] -> {:ok, success}
       [false, error] -> {:error, error}
