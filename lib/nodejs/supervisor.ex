@@ -97,10 +97,17 @@ defmodule NodeJS.Supervisor do
     ]
 
     children = [
-      :poolboy.child_spec(pool_name, pool_opts, [path])
+      :poolboy.child_spec(pool_name, pool_opts, [path, get_unsecure_tls_setting(opts)])
     ]
 
     opts = [strategy: :one_for_one]
     Supervisor.init(children, opts)
+  end
+
+  defp get_unsecure_tls_setting(opts) do
+    case Keyword.get(opts, :unsecure_tls, false) do
+      true -> "0"
+      _ -> "1"
+    end
   end
 end
