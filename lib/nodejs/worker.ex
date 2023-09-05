@@ -17,8 +17,8 @@ defmodule NodeJS.Worker do
   Starts the Supervisor and underlying node service.
   """
   @spec start_link([binary()], any()) :: {:ok, pid} | {:error, any()}
-  def start_link([module_path, unsecure_tls], opts \\ []) do
-    GenServer.start_link(__MODULE__, [module_path, unsecure_tls], name: Keyword.get(opts, :name))
+  def start_link([module_path, unsecure_tls, proxy_settings], opts \\ []) do
+    GenServer.start_link(__MODULE__, [module_path, unsecure_tls, proxy_settings], name: Keyword.get(opts, :name))
   end
 
   # Node.js REPL Service
@@ -44,18 +44,14 @@ defmodule NodeJS.Worker do
 
   # --- GenServer Callbacks ---
   @doc false
-  def init([module_path, unsecure_tls]) do
+  def init([module_path, unsecure_tls, proxy_settings]) do
     node = System.find_executable("node")
 
     port =
       Port.open(
         {:spawn_executable, node},
         line: @read_chunk_size,
-        env: [
-          {'NODE_PATH', node_path(module_path)},
-          {'WRITE_CHUNK_SIZE', String.to_charlist("#{@read_chunk_size}")},
-          {'NODE_TLS_REJECT_UNAUTHORIZED', String.to_charlist(unsecure_tls)}
-        ],
+        env: get_env_options(module_path, unsecure_tls, proxy_settings),
         args: [node_service_path()]
       )
 
@@ -130,5 +126,22 @@ defmodule NodeJS.Worker do
   @doc false
   def terminate(_reason, [_, port]) do
     send(port, {self(), :close})
+  end
+
+  defp get_env_options(module_path, unsecure_tls, nil) do
+    [
+      {'NODE_PATH', node_path(module_path)},
+      {'WRITE_CHUNK_SIZE', String.to_charlist("#{@read_chunk_size}")},
+      {'NODE_TLS_REJECT_UNAUTHORIZED', String.to_charlist(unsecure_tls)}
+    ]
+  end
+
+  defp get_env_options(module_path, unsecure_tls, proxy_settings) do
+    [
+      {'NODE_PATH', node_path(module_path)},
+      {'WRITE_CHUNK_SIZE', String.to_charlist("#{@read_chunk_size}")},
+      {'NODE_TLS_REJECT_UNAUTHORIZED', String.to_charlist(unsecure_tls)},
+      proxy_settings
+    ]
   end
 end
