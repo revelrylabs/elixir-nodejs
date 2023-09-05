@@ -97,7 +97,15 @@ defmodule NodeJS.Supervisor do
     ]
 
     children = [
-      :poolboy.child_spec(pool_name, pool_opts, [path, get_unsecure_tls_setting(opts)])
+      :poolboy.child_spec(
+        pool_name,
+        pool_opts,
+        [
+          path,
+          get_unsecure_tls_setting(opts),
+          get_proxy_setting(opts)
+        ]
+      )
     ]
 
     opts = [strategy: :one_for_one]
@@ -108,6 +116,16 @@ defmodule NodeJS.Supervisor do
     case Keyword.get(opts, :unsecure_tls, false) do
       true -> "0"
       _ -> "1"
+    end
+  end
+
+  defp get_proxy_setting(opts) do
+    case Keyword.get(opts, :proxy_settings, nil) do
+      nil -> nil
+      %{http: connection_uri} ->
+        {'HTTP_PROXY', String.to_charlist(connection_uri)}
+      %{https: connection_uri} ->
+        {'HTTPS_PROXY', String.to_charlist(connection_uri)}
     end
   end
 end
