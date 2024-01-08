@@ -122,10 +122,23 @@ defmodule NodeJS.Supervisor do
   defp get_proxy_setting(opts) do
     case Keyword.get(opts, :proxy_settings, nil) do
       nil -> nil
-      %{http: connection_uri} ->
-        {'HTTP_PROXY', String.to_charlist(connection_uri)}
-      %{https: connection_uri} ->
-        {'HTTPS_PROXY', String.to_charlist(connection_uri)}
+      proxy_settings -> build_proxy_settings(proxy_settings)
     end
   end
+
+  defp build_proxy_settings(proxy_settings) do
+    proxy_settings |> add_connection_uri |> maybe_add_no_proxy(proxy_settings)
+  end
+
+  defp add_connection_uri(%{http: connection_uri}),
+    do: {'HTTP_PROXY', String.to_charlist(connection_uri)}
+
+  defp add_connection_uri(%{https: connection_uri}),
+    do: {'HTTPS_PROXY', String.to_charlist(connection_uri)}
+
+  defp maybe_add_no_proxy(opts, %{no_proxy: no_proxy})
+       when is_binary(no_proxy) and no_proxy !== "",
+       do: Keyword.put(opts, :no_proxy, no_proxy)
+
+  defp maybe_add_no_proxy(opts, _), do: opts
 end
