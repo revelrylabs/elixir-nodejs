@@ -32,10 +32,11 @@ defmodule NodeJS.Supervisor do
   defp run_in_transaction(module, args, opts) do
     binary = Keyword.get(opts, :binary, false)
     timeout = Keyword.get(opts, :timeout, @timeout)
+    esm = Keyword.get(opts, :esm, module |> elem(0) |> to_string |> String.ends_with?(".mjs"))
 
     func = fn pid ->
       try do
-        GenServer.call(pid, {module, args, [binary: binary, timeout: timeout]}, timeout)
+        GenServer.call(pid, {module, args, [binary: binary, timeout: timeout, esm: esm]}, timeout)
       catch
         :exit, {:timeout, _} ->
           {:error, "Call timed out."}
