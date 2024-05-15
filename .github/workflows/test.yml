@@ -31,3 +31,5 @@ jobs:
       - run: mix compile
       - run: npm install --prefix=test/js
       - run: mix test
+      - if: matrix.elixir == '1.16'
+        run: mix format --check-formatted
