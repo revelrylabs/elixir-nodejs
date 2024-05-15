@@ -1,0 +1,45 @@
+name: Test and Deploy
+on:
+  push:
+  release:
+    types: [published]
+jobs:
+  tests:
+    services:
+      db:
+        image: postgres:15
+        ports: ["5432:5432"]
+        env:
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    runs-on: ubuntu-22.04
+    name: OTP ${{matrix.otp}} / Elixir ${{matrix.elixir}}
+    env:
+      MIX_ENV: test
+    strategy:
+      matrix:
+        include:
+          - otp: "24"
+            elixir: "1.12"
+            nodejs: "18.x"
+          - otp: "26"
+            elixir: "1.16"
+            nodejs: "20.x"
+    steps:
+      - uses: actions/checkout@v3
+      - uses: erlef/setup-beam@v1
+        with:
+          otp-version: ${{matrix.otp}}
+          elixir-version: ${{matrix.elixir}}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{matrix.nodejs}}
+      - run: mix deps.get
+      - run: mix compile
+      - run: npm install --prefix=test/js
+      - run: mix test
