@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [3.0.0]
 
+This version is mainly a maintenance release to get all of the tooling and required language versions up-to-date so we can begin merging more substantive fixes and iterating on functionality.
+
 ### Changed
 - update language support minimums to Elixir 1.12, OTP 24, and Node 18
 - format code with the latest `mix format` settings
