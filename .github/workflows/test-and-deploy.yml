@@ -4,7 +4,7 @@ on:
   release:
     types: [published]
 jobs:
-  tests:
+  test-and-deploy:
     runs-on: ubuntu-22.04
     name: OTP ${{matrix.otp}} / Elixir ${{matrix.elixir}}
     env:
@@ -33,3 +33,6 @@ jobs:
       - run: mix test
       - if: matrix.elixir == '1.16'
         run: mix format --check-formatted
+      - name: Deploy to Hex
+        if: ${{ github.event_name == 'release' && matrix.elixir == '1.16' }}
+        run: mix hex.publish --yes
