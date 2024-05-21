@@ -4,8 +4,8 @@ defmodule NodeJS.MixProject do
   def project do
     [
       app: :nodejs,
-      version: "2.0.0",
-      elixir: "~> 1.7",
+      version: "3.0.0",
+      elixir: "~> 1.12",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       description: description(),
@@ -37,7 +37,7 @@ defmodule NodeJS.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:ex_doc, "~> 0.22.0", only: :dev},
+      {:ex_doc, "~> 0.33.0", only: [:dev, :test]},
       {:jason, "~> 1.0"},
       {:poolboy, "~> 1.5.1"},
       {:ssl_verify_fun, "~> 1.1.7", manager: :rebar3, override: true}
