@@ -9,6 +9,7 @@ jobs:
     name: OTP ${{matrix.otp}} / Elixir ${{matrix.elixir}}
     env:
       MIX_ENV: test
+      HEX_API_KEY: ${{ secrets.HEX_API_KEY }}
     strategy:
       matrix:
         include:
