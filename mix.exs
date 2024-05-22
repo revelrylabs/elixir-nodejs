@@ -40,7 +40,7 @@ defmodule NodeJS.MixProject do
       {:ex_doc, "~> 0.33.0", only: [:dev, :test]},
       {:jason, "~> 1.0"},
       {:poolboy, "~> 1.5.1"},
-      {:ssl_verify_fun, "~> 1.1.7", manager: :rebar3, override: true}
+      {:ssl_verify_fun, "~> 1.1.7", manager: :rebar3}
     ]
   end
 
