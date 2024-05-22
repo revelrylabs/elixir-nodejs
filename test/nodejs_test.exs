@@ -86,7 +86,9 @@ defmodule NodeJS.Test do
 
     test "object does not exist" do
       assert {:error, msg} = NodeJS.call({"keyed-functions", :idontexist, :foo})
-      assert js_error_message(msg) === "TypeError: Cannot read property 'foo' of undefined"
+
+      assert js_error_message(msg) ===
+               "TypeError: Cannot read properties of undefined (reading 'foo')"
     end
   end
 

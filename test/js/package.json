@@ -9,6 +9,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "uuid": "^3.3.2"
+    "uuid": "^9.0.1"
   }
 }
