@@ -81,7 +81,9 @@ defmodule NodeJS.Test do
 
     test "function does not exist" do
       assert {:error, msg} = NodeJS.call({"keyed-functions", :idontexist})
-      assert js_error_message(msg) === "TypeError: fn is not a function"
+
+      assert js_error_message(msg) ===
+               "Error: Could not find function 'idontexist' in module 'keyed-functions'"
     end
 
     test "object does not exist" do
@@ -218,6 +220,40 @@ defmodule NodeJS.Test do
   describe "console.log statements" do
     test "don't crash NodeJS process" do
       assert {:ok, 42} = NodeJS.call({"keyed-functions", :logsSomething}, [])
+    end
+  end
+
+  describe "importing esm module" do
+    test "works if module is available in path" do
+      result = NodeJS.call({"./esm-module.mjs", :hello}, ["world"], esm: true)
+      assert {:ok, "Hello, world!"} = result
+    end
+
+    test "can import exported library function" do
+      assert {:ok, _uuid} = NodeJS.call({"esm-module.mjs", :uuid}, [], esm: true)
+    end
+
+    test "using mjs extension makes esm: true obsolete" do
+      assert {:ok, _uuid} = NodeJS.call({"esm-module.mjs", :uuid})
+    end
+
+    test "returned promises are resolved" do
+      assert {:ok, _uuid} = NodeJS.call({"esm-module.mjs", :echo}, ["1"])
+    end
+
+    test "fails if extension is not specified" do
+      assert {:error, msg} = NodeJS.call({"esm-module", :hello}, ["me"], esm: true)
+      assert js_error_message(msg) =~ "Cannot find module"
+    end
+
+    test "fails if file not found" do
+      assert {:error, msg} = NodeJS.call({"nonexisting.js", :hello}, [], esm: true)
+      assert js_error_message(msg) =~ "Cannot find module"
+    end
+
+    test "fails if file has errors" do
+      assert {:error, msg} = NodeJS.call({"esm-module-invalid.mjs", :hello})
+      assert js_error_message(msg) =~ "ReferenceError: require is not defined in ES module scope"
     end
   end
 end

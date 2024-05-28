@@ -1,8 +1,14 @@
+const fs = require('node:fs/promises');
 const path = require('path')
 const readline = require('readline')
-const WRITE_CHUNK_SIZE = parseInt(process.env.WRITE_CHUNK_SIZE, 10)
 
+const WRITE_CHUNK_SIZE = parseInt(process.env.WRITE_CHUNK_SIZE, 10)
+const NODE_PATHS = (process.env.NODE_PATH || '').split(path.delimiter).filter(Boolean)
 const PREFIX = "__elixirnodejs__UOSBsDUP6bp9IF5__";
+
+async function fileExists(file) {
+  return await fs.access(file, fs.constants.R_OK).then(() => true).catch(() => false);
+}
 
 function requireModule(modulePath) {
   // When not running in production mode, refresh the cache on each call.
@@ -13,6 +19,23 @@ function requireModule(modulePath) {
   return require(modulePath)
 }
 
+async function importModuleRespectingNodePath(modulePath) {
+  // to be compatible with cjs require, we simulate resolution using NODE_PATH
+  for(const nodePath of NODE_PATHS) {
+    // Try to resolve the module in the current path
+    const modulePathToTry = path.join(nodePath, modulePath)
+    if (fileExists(modulePathToTry)) {
+      // imports are cached. To bust that cache, add unique query string to module name
+      // eg NodeJS.call({"esm-module.mjs?q=#{System.unique_integer()}", :fn})
+      // it will leak memory, so I'm not doing it by default! 
+      // see more: https://ar.al/2021/02/22/cache-busting-in-node.js-dynamic-esm-imports/#cache-invalidation-in-esm-with-dynamic-imports
+      return await import(modulePathToTry)
+    }
+  }
+  
+  throw new Error(`Could not find module '${modulePath}'. Hint: File extensions are required in ESM. Tried ${NODE_PATHS.join(", ")}`)
+}
+
 function getAncestor(parent, [key, ...keys]) {
   if (typeof key === 'undefined') {
     return parent
@@ -21,28 +44,15 @@ function getAncestor(parent, [key, ...keys]) {
   return getAncestor(parent[key], keys)
 }
 
-function requireModuleFunction([modulePath, ...keys]) {
-  const mod = requireModule(modulePath)
-
-  return getAncestor(mod, keys)
-}
-
-async function callModuleFunction(moduleFunction, args) {
-  const fn = requireModuleFunction(moduleFunction)
-  const returnValue = fn(...args)
-
-  if (returnValue instanceof Promise) {
-    return await returnValue
-  }
-
-  return returnValue
-}
-
 async function getResponse(string) {
   try {
-    const [moduleFunction, args] = JSON.parse(string)
-    const result = await callModuleFunction(moduleFunction, args)
-
+    const [[modulePath, ...keys], args, useImport] = JSON.parse(string)
+    const importFn = useImport ? importModuleRespectingNodePath : requireModule
+    const mod = await importFn(modulePath) 
+    const fn = await getAncestor(mod, keys)
+    if (!fn) throw new Error(`Could not find function '${keys.join(".")}' in module '${modulePath}'`)
+    const returnValue = fn(...args)
+    const result = returnValue instanceof Promise ? await returnValue : returnValue
     return JSON.stringify([true, result])
   } catch ({ message, stack }) {
     return JSON.stringify([false, `${message}\n${stack}`])

@@ -98,7 +98,8 @@ defmodule NodeJS.Worker do
       when is_tuple(module) do
     timeout = Keyword.get(opts, :timeout)
     binary = Keyword.get(opts, :binary)
-    body = Jason.encode!([Tuple.to_list(module), args])
+    esm = Keyword.get(opts, :esm, false)
+    body = Jason.encode!([Tuple.to_list(module), args, esm])
     Port.command(port, "#{body}\n")
 
     case get_response(~c"", timeout) do
