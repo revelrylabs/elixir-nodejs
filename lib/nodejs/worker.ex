@@ -66,9 +66,7 @@ defmodule NodeJS.Worker do
   defp get_env_vars(module_path) do
     [
       {~c"NODE_PATH", node_path(module_path)},
-      {~c"WRITE_CHUNK_SIZE", String.to_charlist("#{@read_chunk_size}")},
-      # Disable Node.js warnings about experimental features
-      {~c"NODE_NO_WARNINGS", ~c"1"}
+      {~c"WRITE_CHUNK_SIZE", String.to_charlist("#{@read_chunk_size}")}
     ]
   end
 
