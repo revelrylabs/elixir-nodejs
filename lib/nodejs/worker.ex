@@ -55,7 +55,6 @@ defmodule NodeJS.Worker do
           {:env, get_env_vars(module_path)},
           {:args, [node_service_path()]},
           :exit_status,
-          :use_stdio,
           :stderr_to_stdout
         ]
       )
@@ -70,36 +69,15 @@ defmodule NodeJS.Worker do
     ]
   end
 
-  defp maybe_strip_ansi(data) do
-    case data do
-      @prefix ++ _ -> data
-      other -> strip_ansi(other)
-    end
-  end
-
-  defp strip_ansi(string) when is_list(string) do
-    string
-    |> List.to_string()
-    |> strip_ansi()
-    |> String.to_charlist()
-  end
-
-  defp strip_ansi(string) when is_binary(string) do
-    string
-    |> String.replace(~r/\e\[[0-9;]*[a-zA-Z]/, "")  # CSI sequences
-    |> String.replace(~r/\e\].*?(?:\a|\e\\)/, "")   # OSC sequences
-    |> String.replace(~r/\e[PX^_].*?(?:\e\\|\a)/, "") # Other escape sequences
-    |> String.replace(~r/\r\n?/, "\n")  # Normalize line endings
-  end
-
   defp get_response(data, timeout) do
     receive do
       {_port, {:data, {flag, chunk}}} ->
-        cleaned_chunk = maybe_strip_ansi(chunk)
-        data = data ++ cleaned_chunk
+        data = data ++ chunk
 
         case flag do
-          :noeol -> get_response(data, timeout)
+          :noeol ->
+            get_response(data, timeout)
+
           :eol ->
             case data do
               @prefix ++ protocol_data -> {:ok, protocol_data}
