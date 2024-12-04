@@ -133,8 +133,14 @@ defmodule NodeJS.Worker do
     end
   end
 
+  defp reset_terminal(port) do
+    Port.command(port, "\x1b[0m\x1b[?7h\x1b[?25h\x1b[H\x1b[2J")
+    Port.command(port, "\x1b[!p\x1b[?47l")
+  end
+
   @doc false
   def terminate(_reason, [_, port]) do
+    reset_terminal(port)
     send(port, {self(), :close})
   end
 end
