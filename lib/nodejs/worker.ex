@@ -50,20 +50,28 @@ defmodule NodeJS.Worker do
     port =
       Port.open(
         {:spawn_executable, node},
-        line: @read_chunk_size,
-        env: [
-          {~c"NODE_PATH", node_path(module_path)},
-          {~c"WRITE_CHUNK_SIZE", String.to_charlist("#{@read_chunk_size}")}
-        ],
-        args: [node_service_path()]
+        [
+          {:line, @read_chunk_size},
+          {:env, get_env_vars(module_path)},
+          {:args, [node_service_path()]},
+          :exit_status,
+          :stderr_to_stdout
+        ]
       )
 
     {:ok, [node_service_path(), port]}
   end
 
+  defp get_env_vars(module_path) do
+    [
+      {~c"NODE_PATH", node_path(module_path)},
+      {~c"WRITE_CHUNK_SIZE", String.to_charlist("#{@read_chunk_size}")}
+    ]
+  end
+
   defp get_response(data, timeout) do
     receive do
-      {_, {:data, {flag, chunk}}} ->
+      {_port, {:data, {flag, chunk}}} ->
         data = data ++ chunk
 
         case flag do
@@ -72,16 +80,15 @@ defmodule NodeJS.Worker do
 
           :eol ->
             case data do
-              @prefix ++ protocol_data ->
-                {:ok, protocol_data}
-
-              _ ->
-                get_response(~c"", timeout)
+              @prefix ++ protocol_data -> {:ok, protocol_data}
+              _ -> get_response(~c"", timeout)
             end
         end
+
+      {_port, {:exit_status, status}} when status != 0 ->
+        {:error, {:exit, status}}
     after
-      timeout ->
-        {:error, :timeout}
+      timeout -> {:error, :timeout}
     end
   end
 
@@ -126,8 +133,14 @@ defmodule NodeJS.Worker do
     end
   end
 
+  defp reset_terminal(port) do
+    Port.command(port, "\x1b[0m\x1b[?7h\x1b[?25h\x1b[H\x1b[2J")
+    Port.command(port, "\x1b[!p\x1b[?47l")
+  end
+
   @doc false
   def terminate(_reason, [_, port]) do
+    reset_terminal(port)
     send(port, {self(), :close})
   end
 end
