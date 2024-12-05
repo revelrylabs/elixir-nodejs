@@ -261,17 +261,18 @@ defmodule NodeJS.Test do
     test "handles ANSI sequences without corrupting protocol" do
       # Test basic ANSI handling - protocol messages should work
       assert {:ok, "clean output"} = NodeJS.call({"terminal-test", "outputWithANSI"})
-      
+
       # Test complex ANSI sequences - protocol messages should work
       assert {:ok, "complex test passed"} = NodeJS.call({"terminal-test", "complexOutput"})
-      
+
       # Test multiple processes don't interfere with each other
-      tasks = for _ <- 1..4 do
-        Task.async(fn ->
-          NodeJS.call({"terminal-test", "outputWithANSI"})
-        end)
-      end
-      
+      tasks =
+        for _ <- 1..4 do
+          Task.async(fn ->
+            NodeJS.call({"terminal-test", "outputWithANSI"})
+          end)
+        end
+
       results = Task.await_many(tasks)
       assert Enum.all?(results, &match?({:ok, "clean output"}, &1))
     end
