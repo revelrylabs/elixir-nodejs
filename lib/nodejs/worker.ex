@@ -123,6 +123,15 @@ defmodule NodeJS.Worker do
     end
   end
 
+  def handle_info({_pid, data}, state) do
+    with :dev <- Mix.env(),
+         {_, {:eol, msg}} <- data do
+      IO.puts("NodeJS: #{msg}")
+    end
+
+    {:noreply, state}
+  end
+
   defp decode(data) do
     data
     |> to_string()
