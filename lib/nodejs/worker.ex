@@ -133,7 +133,7 @@ defmodule NodeJS.Worker do
   # When debug_mode is enabled, these messages (like Node.js debug info)
   # will be logged at info level
   @doc false
-  def handle_info({_pid, {:data, {_flag, msg}} = data}, state) do
+  def handle_info({_pid, {:data, {_flag, msg}}}, state) do
     if debug_mode?() do
       Logger.info("NodeJS: #{msg}")
     end
