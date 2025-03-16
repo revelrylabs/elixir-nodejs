@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [3.1.3]
+
+### Added
+- Added `debug_mode` configuration option to handle Node.js stdout/stderr messages
+- Implemented proper `handle_info/2` callback to handle messages from Node.js processes
+- Added safeguards to reset_terminal to prevent errors during termination with invalid ports
+
+### Fixed
+- Fixed "unexpected message in handle_info/2" errors when Node.js emits debug messages
+- Fixed potential crashes during termination when a port becomes invalid
+
+### Contributors
+- @francois-codes for the initial implementation
+- Revelry team for refinements
+
 ## [3.1.2]
 
 ### Changed

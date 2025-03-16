@@ -124,18 +124,25 @@ defmodule NodeJS.Worker do
     end
   end
 
-  defp env do
-    Mix.env()
-  rescue
-    _ -> :release
+  # Determines if debug mode is enabled via application configuration
+  defp debug_mode? do
+    Application.get_env(:nodejs, :debug_mode, false)
   end
 
-  def handle_info({_pid, data}, state) do
-    with :dev <- env(),
-         {_, {:eol, msg}} <- data do
+  # Handles any messages from the Node.js process
+  # When debug_mode is enabled, these messages (like Node.js debug info)
+  # will be logged at info level
+  @doc false
+  def handle_info({_pid, {:data, {_flag, msg}} = data}, state) do
+    if debug_mode?() do
       Logger.info("NodeJS: #{msg}")
     end
 
+    {:noreply, state}
+  end
+
+  # Catch-all handler for other messages
+  def handle_info(_message, state) do
     {:noreply, state}
   end
 
@@ -149,9 +156,16 @@ defmodule NodeJS.Worker do
     end
   end
 
+  # Safely resets the terminal, handling potential errors if
+  # the port is already closed or invalid
   defp reset_terminal(port) do
-    Port.command(port, "\x1b[0m\x1b[?7h\x1b[?25h\x1b[H\x1b[2J")
-    Port.command(port, "\x1b[!p\x1b[?47l")
+    try do
+      Port.command(port, "\x1b[0m\x1b[?7h\x1b[?25h\x1b[H\x1b[2J")
+      Port.command(port, "\x1b[!p\x1b[?47l")
+    rescue
+      _ ->
+        Logger.debug("NodeJS: Could not reset terminal - port may be closed")
+    end
   end
 
   @doc false
