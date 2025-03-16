@@ -277,4 +277,45 @@ defmodule NodeJS.Test do
       assert Enum.all?(results, &match?({:ok, "clean output"}, &1))
     end
   end
+
+  describe "debug mode" do
+    test "handles debug messages without crashing" do
+      File.mkdir_p!("test/js/debug_test")
+
+      File.write!("test/js/debug_test/debug_logger.js", """
+      // This file outputs debugging information to stdout
+      console.log("Debug message: Module loading");
+      console.debug("Debug message: Initializing module");
+
+      module.exports = function testFunction(input) {
+        console.log(`Debug message: Function called with input: ${input}`);
+        console.debug("Debug message: Processing input");
+
+        return `Processed: ${input}`;
+      };
+      """)
+
+      # With debug_mode disabled, function still works despite debug output
+      result = NodeJS.call("debug_test/debug_logger", ["test input"])
+      assert {:ok, "Processed: test input"} = result
+
+      # Enable debug_mode to verify it works in that mode too
+      original_setting = Application.get_env(:nodejs, :debug_mode)
+      Application.put_env(:nodejs, :debug_mode, true)
+
+      # Function still works with debug_mode enabled
+      result = NodeJS.call("debug_test/debug_logger", ["test input"])
+      assert {:ok, "Processed: test input"} = result
+
+      # Restore original setting
+      if is_nil(original_setting) do
+        Application.delete_env(:nodejs, :debug_mode)
+      else
+        Application.put_env(:nodejs, :debug_mode, original_setting)
+      end
+
+      # Clean up
+      File.rm!("test/js/debug_test/debug_logger.js")
+    end
+  end
 end
