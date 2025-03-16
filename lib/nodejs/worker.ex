@@ -12,6 +12,7 @@ defmodule NodeJS.Worker do
   @moduledoc """
   A genserver that controls the starting of the node service
   """
+  require Logger
 
   @doc """
   Starts the Supervisor and underlying node service.
@@ -121,6 +122,21 @@ defmodule NodeJS.Worker do
       {:error, :timeout} ->
         {:reply, {:error, :timeout}, state}
     end
+  end
+
+  defp env do
+    Mix.env()
+  rescue
+    _ -> :release
+  end
+
+  def handle_info({_pid, data}, state) do
+    with :dev <- env(),
+         {_, {:eol, msg}} <- data do
+      Logger.info("NodeJS: #{msg}")
+    end
+
+    {:noreply, state}
   end
 
   defp decode(data) do
