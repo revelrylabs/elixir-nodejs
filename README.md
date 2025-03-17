@@ -36,6 +36,22 @@ directory containing your JavaScript modules.
 supervisor(NodeJS, [[path: "/node_app_root", pool_size: 4]])
 ```
 
+### Debug Mode
+
+When working with Node.js applications, you may encounter debug messages or warnings from the Node.js runtime, especially when using inspector or debugging tools. To properly handle these messages:
+
+```elixir
+# In your config/dev.exs or other appropriate config file
+config :nodejs, debug_mode: true
+```
+
+When `debug_mode` is enabled:
+- Node.js stdout/stderr messages will be logged at the info level
+- Messages like "Debugger listening on..." will not cause errors
+- All Node.js processes will log their output through Elixir's Logger
+
+This is particularly useful during development or when debugging Node.js integration issues.
+
 ### Calling JavaScript module functions with `NodeJS.call(module, args \\ [])`.
 
 If the module exports a function directly, like this:
