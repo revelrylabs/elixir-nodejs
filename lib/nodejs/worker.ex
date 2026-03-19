@@ -60,7 +60,7 @@ defmodule NodeJS.Worker do
         ]
       )
 
-    {:ok, [node_service_path(), port]}
+    {:ok, %{service_path: node_service_path(), port: port, uid_counter: 0}}
   end
 
   defp get_env_vars(module_path) do
@@ -70,19 +70,29 @@ defmodule NodeJS.Worker do
     ]
   end
 
-  defp get_response(data, timeout) do
+  defp get_response(data, timeout, expected_uid) do
     receive do
       {_port, {:data, {flag, chunk}}} ->
         data = data ++ chunk
 
         case flag do
           :noeol ->
-            get_response(data, timeout)
+            get_response(data, timeout, expected_uid)
 
           :eol ->
             case data do
-              @prefix ++ protocol_data -> {:ok, protocol_data}
-              _ -> get_response(~c"", timeout)
+              @prefix ++ protocol_data ->
+                case extract_uid(protocol_data) do
+                  {^expected_uid, response_data} ->
+                    {:ok, response_data}
+
+                  {_stale_uid, _response_data} ->
+                    # Response from a different (likely timed-out) request — discard it
+                    get_response(~c"", timeout, expected_uid)
+                end
+
+              _ ->
+                get_response(~c"", timeout, expected_uid)
             end
         end
 
@@ -90,6 +100,15 @@ defmodule NodeJS.Worker do
         {:error, {:exit, status}}
     after
       timeout -> {:error, :timeout}
+    end
+  end
+
+  # Extracts the UID and response data from protocol data.
+  # Protocol format: "uid:json_response"
+  defp extract_uid(data) do
+    case Enum.split_while(data, &(&1 != ?:)) do
+      {uid_chars, [?: | rest]} -> {List.to_string(uid_chars), rest}
+      _ -> {"", data}
     end
   end
 
@@ -102,15 +121,18 @@ defmodule NodeJS.Worker do
   end
 
   @doc false
-  def handle_call({module, args, opts}, _from, [_, port] = state)
+  def handle_call({module, args, opts}, _from, %{port: port, uid_counter: uid_counter} = state)
       when is_tuple(module) do
     timeout = Keyword.get(opts, :timeout)
     binary = Keyword.get(opts, :binary)
     esm = Keyword.get(opts, :esm, false)
-    body = Jason.encode!([Tuple.to_list(module), args, esm])
+    uid = Integer.to_string(uid_counter)
+    body = Jason.encode!([uid, Tuple.to_list(module), args, esm])
     Port.command(port, "#{body}\n")
 
-    case get_response(~c"", timeout) do
+    state = %{state | uid_counter: uid_counter + 1}
+
+    case get_response(~c"", timeout, uid) do
       {:ok, response} ->
         decoded_response =
           response
@@ -169,7 +191,7 @@ defmodule NodeJS.Worker do
   end
 
   @doc false
-  def terminate(_reason, [_, port]) do
+  def terminate(_reason, %{port: port}) do
     reset_terminal(port)
     send(port, {self(), :close})
   end

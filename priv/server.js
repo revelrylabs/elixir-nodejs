@@ -24,15 +24,15 @@ async function importModuleRespectingNodePath(modulePath) {
   for(const nodePath of NODE_PATHS) {
     // Try to resolve the module in the current path
     const modulePathToTry = path.join(nodePath, modulePath)
-    if (fileExists(modulePathToTry)) {
+    if (await fileExists(modulePathToTry)) {
       // imports are cached. To bust that cache, add unique query string to module name
       // eg NodeJS.call({"esm-module.mjs?q=#{System.unique_integer()}", :fn})
-      // it will leak memory, so I'm not doing it by default! 
+      // it will leak memory, so I'm not doing it by default!
       // see more: https://ar.al/2021/02/22/cache-busting-in-node.js-dynamic-esm-imports/#cache-invalidation-in-esm-with-dynamic-imports
       return await import(modulePathToTry)
     }
   }
-  
+
   throw new Error(`Could not find module '${modulePath}'. Hint: File extensions are required in ESM. Tried ${NODE_PATHS.join(", ")}`)
 }
 
@@ -45,22 +45,28 @@ function getAncestor(parent, [key, ...keys]) {
 }
 
 async function getResponse(string) {
+  let uid = ""
   try {
-    const [[modulePath, ...keys], args, useImport] = JSON.parse(string)
+    const parsed = JSON.parse(string)
+    uid = parsed[0]
+    const [[modulePath, ...keys], args, useImport] = parsed.slice(1)
     const importFn = useImport ? importModuleRespectingNodePath : requireModule
-    const mod = await importFn(modulePath) 
+    const mod = await importFn(modulePath)
     const fn = await getAncestor(mod, keys)
     if (!fn) throw new Error(`Could not find function '${keys.join(".")}' in module '${modulePath}'`)
     const returnValue = fn(...args)
     const result = returnValue instanceof Promise ? await returnValue : returnValue
-    return JSON.stringify([true, result])
-  } catch ({ message, stack }) {
-    return JSON.stringify([false, `${message}\n${stack}`])
+    return { uid, data: JSON.stringify([true, result]) }
+  } catch (err) {
+    const message = err?.message ?? String.valueOf(err)
+    const stack = err?.stack ?? ""
+    return { uid, data: JSON.stringify([false, `${message}\n${stack}`]) }
   }
 }
 
 async function onLine(string) {
-  const buffer = Buffer.from(`${await getResponse(string)}\n`)
+  const { uid, data } = await getResponse(string)
+  const buffer = Buffer.from(`${uid}:${data}\n`)
 
   // The function we called might have written something to stdout without starting a new line.
   // So we add one here and write the response after the prefix
