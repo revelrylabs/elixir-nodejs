@@ -7,6 +7,7 @@ defmodule NodeJS.MixProject do
       version: "3.1.3",
       elixir: "~> 1.12",
       start_permanent: Mix.env() == :prod,
+      aliases: aliases(),
       deps: deps(),
       description: description(),
       package: package(),
@@ -67,6 +68,12 @@ defmodule NodeJS.MixProject do
         "GitHub" => "https://github.com/revelrylabs/elixir-nodejs"
       },
       build_tools: ["mix"]
+    ]
+  end
+
+  defp aliases do
+    [
+      setup: ["deps.get", "compile", "cmd npm install --prefix=test/js"]
     ]
   end
 end
