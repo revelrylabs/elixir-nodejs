@@ -70,14 +70,14 @@ defmodule NodeJS.Worker do
     ]
   end
 
-  defp get_response(data, timeout, expected_uid) do
+  defp get_response(data, timeout, port, expected_uid) do
     receive do
-      {_port, {:data, {flag, chunk}}} ->
+      {^port, {:data, {flag, chunk}}} ->
         data = data ++ chunk
 
         case flag do
           :noeol ->
-            get_response(data, timeout, expected_uid)
+            get_response(data, timeout, port, expected_uid)
 
           :eol ->
             case data do
@@ -88,15 +88,15 @@ defmodule NodeJS.Worker do
 
                   {_stale_uid, _response_data} ->
                     # Response from a different (likely timed-out) request — discard it
-                    get_response(~c"", timeout, expected_uid)
+                    get_response(~c"", timeout, port, expected_uid)
                 end
 
               _ ->
-                get_response(~c"", timeout, expected_uid)
+                get_response(~c"", timeout, port, expected_uid)
             end
         end
 
-      {_port, {:exit_status, status}} when status != 0 ->
+      {^port, {:exit_status, status}} when status != 0 ->
         {:error, {:exit, status}}
     after
       timeout -> {:error, :timeout}
@@ -132,7 +132,7 @@ defmodule NodeJS.Worker do
 
     state = %{state | uid_counter: uid_counter + 1}
 
-    case get_response(~c"", timeout, uid) do
+    case get_response(~c"", timeout, port, uid) do
       {:ok, response} ->
         decoded_response =
           response
