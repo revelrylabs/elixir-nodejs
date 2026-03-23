@@ -39,7 +39,7 @@ defmodule NodeJS.Supervisor do
         GenServer.call(pid, {module, args, [binary: binary, timeout: timeout, esm: esm]}, timeout)
       catch
         :exit, {:timeout, _} ->
-          {:error, "Call timed out."}
+          {:error, :timeout}
 
         :exit, error ->
           {:error, {:node_js_worker_exit, error}}
@@ -69,7 +69,7 @@ defmodule NodeJS.Supervisor do
       run_in_transaction(module, args, opts)
     catch
       :exit, {:timeout, _} ->
-        {:error, "Call timed out."}
+        {:error, :timeout}
     end
   end
 
@@ -78,7 +78,8 @@ defmodule NodeJS.Supervisor do
     |> call(args, opts)
     |> case do
       {:ok, result} -> result
-      {:error, message} -> raise NodeJS.Error, message: message
+      {:error, message} when is_binary(message) -> raise NodeJS.Error, message: message
+      {:error, :timeout} -> raise NodeJS.Error, message: "Call timed out."
     end
   end
 
