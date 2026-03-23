@@ -46,7 +46,7 @@ defmodule NodeJS.Worker do
   # --- GenServer Callbacks ---
   @doc false
   def init(module_path) do
-    node = System.find_executable("node")
+    node = Application.get_env(:nodejs, :executable_path) || System.find_executable("node")
 
     port =
       Port.open(
