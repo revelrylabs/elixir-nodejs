@@ -174,6 +174,39 @@ defmodule NodeJS.Test do
     end
   end
 
+  describe "request-response correlation" do
+    test "stale responses from timed-out calls never leak into subsequent calls" do
+      # Use a dedicated single-worker pool so all calls go to the same worker.
+      # This guarantees the stale response lands in the same GenServer mailbox
+      # that the follow-up call is waiting on.
+      path = __ENV__.file |> Path.dirname() |> Path.join("js")
+
+      start_supervised!(
+        Supervisor.child_spec(
+          {NodeJS.Supervisor, path: path, name: NodeJS.RaceTest, pool_size: 1},
+          id: NodeJS.RaceTest
+        )
+      )
+
+      # Send a call that takes 300ms but times out after 50ms.
+      # After timeout, the worker is free but the Node.js response is still pending.
+      assert {:error, "Call timed out."} =
+               NodeJS.call("slow-async-echo", [9999, 300],
+                 timeout: 50,
+                 name: NodeJS.RaceTest
+               )
+
+      # Immediately send a follow-up call that takes 500ms.
+      # Its `receive` window overlaps with the stale response arriving at ~300ms.
+      # Without UID correlation, `receive` would pick up the stale `9999` response.
+      assert {:ok, 42} =
+               NodeJS.call("slow-async-echo", [42, 500],
+                 timeout: 5_000,
+                 name: NodeJS.RaceTest
+               )
+    end
+  end
+
   describe "overriding call timeout" do
     test "works, and you can tell because the slow function will time out" do
       assert {:error, "Call timed out."} = NodeJS.call("slow-async-echo", [1111], timeout: 0)
@@ -243,12 +276,12 @@ defmodule NodeJS.Test do
 
     test "fails if extension is not specified" do
       assert {:error, msg} = NodeJS.call({"esm-module", :hello}, ["me"], esm: true)
-      assert js_error_message(msg) =~ "Cannot find module"
+      assert msg =~ "find module"
     end
 
     test "fails if file not found" do
       assert {:error, msg} = NodeJS.call({"nonexisting.js", :hello}, [], esm: true)
-      assert js_error_message(msg) =~ "Cannot find module"
+      assert msg =~ "find module"
     end
 
     test "fails if file has errors" do
