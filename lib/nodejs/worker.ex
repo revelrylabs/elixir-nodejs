@@ -70,14 +70,14 @@ defmodule NodeJS.Worker do
     ]
   end
 
-  defp get_response(data, timeout, port, expected_uid) do
+  defp get_response(data, port, expected_uid) do
     receive do
       {^port, {:data, {flag, chunk}}} ->
         data = data ++ chunk
 
         case flag do
           :noeol ->
-            get_response(data, timeout, port, expected_uid)
+            get_response(data, port, expected_uid)
 
           :eol ->
             case data do
@@ -87,19 +87,16 @@ defmodule NodeJS.Worker do
                     {:ok, response_data}
 
                   {_stale_uid, _response_data} ->
-                    # Response from a different (likely timed-out) request — discard it
-                    get_response(~c"", timeout, port, expected_uid)
+                    get_response(~c"", port, expected_uid)
                 end
 
               _ ->
-                get_response(~c"", timeout, port, expected_uid)
+                get_response(~c"", port, expected_uid)
             end
         end
 
       {^port, {:exit_status, status}} when status != 0 ->
         {:error, {:exit, status}}
-    after
-      timeout -> {:error, :timeout}
     end
   end
 
@@ -123,7 +120,6 @@ defmodule NodeJS.Worker do
   @doc false
   def handle_call({module, args, opts}, _from, %{port: port, uid_counter: uid_counter} = state)
       when is_tuple(module) do
-    timeout = Keyword.get(opts, :timeout)
     binary = Keyword.get(opts, :binary)
     esm = Keyword.get(opts, :esm, false)
     uid = Integer.to_string(uid_counter)
@@ -132,7 +128,7 @@ defmodule NodeJS.Worker do
 
     state = %{state | uid_counter: uid_counter + 1}
 
-    case get_response(~c"", timeout, port, uid) do
+    case get_response(~c"", port, uid) do
       {:ok, response} ->
         decoded_response =
           response
@@ -141,8 +137,8 @@ defmodule NodeJS.Worker do
 
         {:reply, decoded_response, state}
 
-      {:error, :timeout} ->
-        {:reply, {:error, :timeout}, state}
+      {:error, _} = error ->
+        {:reply, error, state}
     end
   end
 

@@ -164,10 +164,10 @@ defmodule NodeJS.Test do
       assert_receive :received_timeout_3, 10
       assert_receive :received_timeout_4, 10
 
-      assert {:error, "Call timed out."} = Task.await(task1)
-      assert {:error, "Call timed out."} = Task.await(task2)
-      assert {:error, "Call timed out."} = Task.await(task3)
-      assert {:error, "Call timed out."} = Task.await(task4)
+      assert {:error, :timeout} = Task.await(task1)
+      assert {:error, :timeout} = Task.await(task2)
+      assert {:error, :timeout} = Task.await(task3)
+      assert {:error, :timeout} = Task.await(task4)
 
       # We should still get an answer here, before the timeout
       assert {:ok, 1115} = NodeJS.call("slow-async-echo", [1115, 1])
@@ -190,7 +190,7 @@ defmodule NodeJS.Test do
 
       # Send a call that takes 300ms but times out after 50ms.
       # After timeout, the worker is free but the Node.js response is still pending.
-      assert {:error, "Call timed out."} =
+      assert {:error, :timeout} =
                NodeJS.call("slow-async-echo", [9999, 300],
                  timeout: 50,
                  name: NodeJS.RaceTest
@@ -207,9 +207,42 @@ defmodule NodeJS.Test do
     end
   end
 
+  describe "CPU-bound JS timing out" do
+    test "doesn't leave the worker pool permanently wedged" do
+      # A single-worker pool makes the failure mode unambiguous: if the timed-out
+      # call doesn't tear down the worker, the follow-up has nowhere to run.
+      path = __ENV__.file |> Path.dirname() |> Path.join("js")
+
+      start_supervised!(
+        Supervisor.child_spec(
+          {NodeJS.Supervisor, path: path, name: NodeJS.WedgedTest, pool_size: 1},
+          id: NodeJS.WedgedTest
+        )
+      )
+
+      # block-event-loop busy-waits for 10s, long enough that a wedged Node
+      # runtime could not possibly service the follow-up call below in time.
+      # The call is aborted at 50ms; the worker must die so its Node process
+      # dies with it, freeing the pool for a fresh worker.
+      assert {:error, :timeout} =
+               NodeJS.call("block-event-loop", [10_000],
+                 timeout: 50,
+                 name: NodeJS.WedgedTest
+               )
+
+      # Must succeed on a freshly spawned worker. If it does not, it means it received
+      # broken runtime from poolboy.
+      assert {:ok, 42} =
+               NodeJS.call("slow-async-echo", [42, 1],
+                 timeout: 2_000,
+                 name: NodeJS.WedgedTest
+               )
+    end
+  end
+
   describe "overriding call timeout" do
     test "works, and you can tell because the slow function will time out" do
-      assert {:error, "Call timed out."} = NodeJS.call("slow-async-echo", [1111], timeout: 0)
+      assert {:error, :timeout} = NodeJS.call("slow-async-echo", [1111], timeout: 0)
       assert_raise NodeJS.Error, fn -> NodeJS.call!("slow-async-echo", [1111], timeout: 0) end
       assert {:ok, 1111} = NodeJS.call("slow-async-echo", [1111])
     end
@@ -223,9 +256,9 @@ defmodule NodeJS.Test do
 
   describe "Implementation details shouldn't leak:" do
     test "Timeouts do not send stray messages to calling process" do
-      assert {:error, "Call timed out."} = NodeJS.call("slow-async-echo", [1111], timeout: 0)
+      assert {:error, :timeout} = NodeJS.call("slow-async-echo", [1111], timeout: 0)
 
-      refute_receive {_ref, {:error, "Call timed out."}}, 50
+      refute_receive {_ref, {:error, :timeout}}, 50
     end
 
     test "Crashes do not bring down the calling process" do
