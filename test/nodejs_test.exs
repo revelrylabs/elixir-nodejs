@@ -209,10 +209,9 @@ defmodule NodeJS.Test do
 
   describe "CPU-bound JS timing out" do
     test "doesn't leave the worker pool permanently wedged" do
-      # A single-worker pool makes the failure mode unambiguous: if the timed-out
-      # call doesn't tear down the worker, the follow-up has nowhere to run.
       path = __ENV__.file |> Path.dirname() |> Path.join("js")
 
+      # Pool of one: if the timed-out worker isn't replaced, the next call has nowhere to run.
       start_supervised!(
         Supervisor.child_spec(
           {NodeJS.Supervisor, path: path, name: NodeJS.WedgedTest, pool_size: 1},
@@ -220,23 +219,11 @@ defmodule NodeJS.Test do
         )
       )
 
-      # block-event-loop busy-waits for 10s, long enough that a wedged Node
-      # runtime could not possibly service the follow-up call below in time.
-      # The call is aborted at 50ms; the worker must die so its Node process
-      # dies with it, freeing the pool for a fresh worker.
       assert {:error, :timeout} =
-               NodeJS.call("block-event-loop", [10_000],
-                 timeout: 50,
-                 name: NodeJS.WedgedTest
-               )
+               NodeJS.call("block-event-loop", [10_000], timeout: 50, name: NodeJS.WedgedTest)
 
-      # Must succeed on a freshly spawned worker. If it does not, it means it received
-      # broken runtime from poolboy.
       assert {:ok, 42} =
-               NodeJS.call("slow-async-echo", [42, 1],
-                 timeout: 2_000,
-                 name: NodeJS.WedgedTest
-               )
+               NodeJS.call("slow-async-echo", [42, 1], timeout: 2_000, name: NodeJS.WedgedTest)
     end
   end
 
