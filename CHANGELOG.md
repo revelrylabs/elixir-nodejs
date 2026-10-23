@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.2.0]
+
 ### Added
 - Added `executable_path` configuration option to specify the Node.js binary instead of relying on `PATH`
 - Added a `mix setup` alias that fetches deps, compiles, and installs the test JavaScript dependencies
@@ -22,6 +24,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - @xtian
 - @s3cur3
 - @katafrakt
+
+## [3.1.4]
+
+### Fixed
+- Fixed response cross-contamination between concurrent calls by correlating requests and responses with unique IDs
+- Explicit pin-matching on the port when receiving messages
 
 ## [3.1.3]
 
