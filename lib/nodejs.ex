@@ -7,7 +7,7 @@ defmodule NodeJS do
 
   ## Options
     * `:timeout` (optional): The timeout (in milliseconds) for the call. Defaults to 30 seconds.
-    * `:esm` (optional): Whether to use ESM modules. Defaults to false.
+    * `:esm` (optional): Whether to load the module as ESM. Defaults to `true` when the module filename ends in `.mjs`, otherwise `false`.
     * `:binary` (optional): Whether to return the response in binary form. Defaults to false.
 
   ## Examples
