@@ -52,6 +52,15 @@ When `debug_mode` is enabled:
 
 This is particularly useful during development or when debugging Node.js integration issues.
 
+### Custom Node.js executable
+
+By default the worker locates `node` on your `PATH`. To use a specific binary,
+for example in a release or container where `node` is not on the `PATH`, set:
+
+```elixir
+config :nodejs, executable_path: "/usr/local/bin/node"
+```
+
 ### Calling JavaScript module functions with `NodeJS.call(module, args \\ [])`.
 
 If the module exports a function directly, like this:
