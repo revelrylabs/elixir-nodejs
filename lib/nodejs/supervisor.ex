@@ -34,20 +34,28 @@ defmodule NodeJS.Supervisor do
     timeout = Keyword.get(opts, :timeout, @timeout)
     esm = Keyword.get(opts, :esm, module |> elem(0) |> to_string |> String.ends_with?(".mjs"))
 
-    func = fn pid ->
-      try do
-        GenServer.call(pid, {module, args, [binary: binary, timeout: timeout, esm: esm]}, timeout)
-      catch
-        :exit, {:timeout, _} ->
-          {:error, "Call timed out."}
-
-        :exit, error ->
-          {:error, {:node_js_worker_exit, error}}
-      end
-    end
-
     pool_name = supervisor_pool(opts)
-    :poolboy.transaction(pool_name, func, timeout)
+    pid = :poolboy.checkout(pool_name, true, timeout)
+
+    try do
+      result = GenServer.call(pid, {module, args, [binary: binary, esm: esm]}, timeout)
+      :poolboy.checkin(pool_name, pid)
+      result
+    catch
+      :exit, {:timeout, _} ->
+        # Kill the stuck worker — don't check it back in. The worker's Node.js
+        # runtime may be wedged (infinite loop, blocked event loop), and
+        # returning it to the pool would hand the next caller a broken runtime.
+        # Poolboy links to workers, so it sees the EXIT and spawns a fresh
+        # replacement on its own; checking in would race that cleanup and
+        # temporarily re-add a dead pid to the pool.
+        Process.exit(pid, :kill)
+        {:error, :timeout}
+
+      :exit, error ->
+        :poolboy.checkin(pool_name, pid)
+        {:error, {:node_js_worker_exit, error}}
+    end
   end
 
   defp supervisor_name(opts) do
@@ -69,7 +77,7 @@ defmodule NodeJS.Supervisor do
       run_in_transaction(module, args, opts)
     catch
       :exit, {:timeout, _} ->
-        {:error, "Call timed out."}
+        {:error, :timeout}
     end
   end
 
@@ -78,6 +86,7 @@ defmodule NodeJS.Supervisor do
     |> call(args, opts)
     |> case do
       {:ok, result} -> result
+      {:error, :timeout} -> raise NodeJS.Error, message: "Call timed out."
       {:error, message} -> raise NodeJS.Error, message: message
     end
   end
