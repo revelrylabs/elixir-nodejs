@@ -10,8 +10,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 - Added `executable_path` configuration option to specify the Node.js binary instead of relying on `PATH`
 
+### Changed
+- Timeouts now return `{:error, :timeout}` instead of `{:error, "Call timed out."}`. The timeout is enforced solely by the `GenServer.call`, and a worker that times out is killed and replaced rather than returned to the pool, so a blocked Node.js runtime can't be handed to the next caller
+
+### Fixed
+- Fixed a `CaseClauseError` crash in the worker when the Node.js process exited with a non-zero status
+
 ### Contributors
 - @xtian
+- @katafrakt
 
 ## [3.1.3]
 
